@@ -1,3 +1,13 @@
+# CodeBlocks
+*.depend
+*.layout
+HookingExe/bin/
+HookingExe/obj/
+HookingDll/bin/
+HookingDll/obj/
+res/
+minhook/
+
 # Object files
 *.o
 *.ko
