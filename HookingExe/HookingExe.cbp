@@ -61,6 +61,10 @@
 			<Add option="-Wall" />
 			<Add directory="../minhook/include" />
 		</Compiler>
+		<Unit filename="Host.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="Host.h" />
 		<Unit filename="Inject.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -68,6 +72,7 @@
 		<Unit filename="Main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="Var.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />
