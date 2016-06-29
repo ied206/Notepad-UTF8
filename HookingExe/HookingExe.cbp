@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/HookingExe" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/NotepadUTF8" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -19,7 +19,7 @@
 				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/HookingExe" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release/NotepadUTF8" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -32,7 +32,7 @@
 				</Linker>
 			</Target>
 			<Target title="64_Debug">
-				<Option output="bin/Debug64/HookingExe" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug64/NotepadUTF8" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug64/" />
 				<Option type="1" />
 				<Option compiler="gnu_gcc_compiler_64" />
@@ -44,7 +44,7 @@
 				</Linker>
 			</Target>
 			<Target title="64_Release">
-				<Option output="bin/Release64/HookingExe" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Release64/NotepadUTF8" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Release64/" />
 				<Option type="1" />
 				<Option compiler="gnu_gcc_compiler_64" />
@@ -61,6 +61,14 @@
 			<Add option="-Wall" />
 			<Add directory="../minhook/include" />
 		</Compiler>
+		<Linker>
+			<Add library="version" />
+			<Add library="shlwapi" />
+		</Linker>
+		<Unit filename="BasicIO.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="BasicIO.h" />
 		<Unit filename="Host.c">
 			<Option compilerVar="CC" />
 		</Unit>

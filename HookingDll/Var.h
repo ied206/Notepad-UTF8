@@ -1,9 +1,12 @@
-#ifndef HOST_H_INCLUDED
-#define HOST_H_INCLUDED
+#ifndef VAR_H_INCLUDED
+#define VAR_H_INCLUDED
+
+#define UNICODE
+#define _UNICODE
+#define _WIN32_WINNT 0x0501
+#define MAX_BUF_LEN 32767
 
 #include <windows.h>
-
-
 
 #define JV_CMP_L    1
 #define JV_CMP_LE   2
@@ -26,10 +29,4 @@ typedef struct
 	WORD bMinor;
 } JV_WIN_VER;
 
-BOOL JV_IsThisProcessNotepad();
-BOOL JV_GetHostVer(JV_WIN_VER* winVer);
-DWORD JV_GetHostArch();
-DWORD JV_GetProcArch();
-BOOL JV_CompareWinVer(JV_WIN_VER* winVer, DWORD op, DWORD effective, WORD major, WORD minor, WORD bMajor, WORD bMinor);
-
-#endif // HOST_H_INCLUDED
+#endif // VAR_H_INCLUDED

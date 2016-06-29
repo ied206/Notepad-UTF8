@@ -5,13 +5,14 @@
 #include <stdint.h>
 #include <inttypes.h>
 
+#include <shlwapi.h>
 #include <windows.h>
-
 #include <tlhelp32.h>
 #include <strsafe.h>
 
 #include "Inject.h"
 #include "Host.h"
+
 
 typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
     PHANDLE ThreadHandle,
@@ -26,8 +27,10 @@ typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
     LPVOID Unknown2,
     LPVOID Unknown3);
 
+typedef BOOL (*fp_HookStart_t)();
+typedef BOOL (*fp_HookStop_t)();
 
-BOOL InjectDLL(DWORD dwPID, WCHAR *szDllPath)
+BOOL JV_InjectDLL(DWORD dwPID, WCHAR *szDllPath)
 {
 	HANDLE hProcess, hThread;
 	JV_WIN_VER winVer;
@@ -53,7 +56,7 @@ BOOL InjectDLL(DWORD dwPID, WCHAR *szDllPath)
 
 	if (JV_CompareWinVer(&winVer, JV_CMP_GE, JV_CMP_L2, 6, 0, 0, 0))
 	{ // Vista <= WinVer
-		fp_NtCreateThreadEx = (fp_NtCreateThreadEx_t) GetProcAddress(GetModuleHandleW(L"ntdll.dllg"), "NtCreateThreadEx");
+		fp_NtCreateThreadEx = (fp_NtCreateThreadEx_t) GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateThreadEx");
 		fp_NtCreateThreadEx(&hThread, 0x2000000, NULL, hProcess, remoteThreadProc, remoteProcBuf, FALSE, 0, NULL, NULL, NULL);
 	}
 	else
@@ -77,7 +80,42 @@ BOOL InjectDLL(DWORD dwPID, WCHAR *szDllPath)
 // 	WriteProcessMemory(hProcess, _g_ftOpenAs, (LPVOID) srcByte, sizeof(DWORD), NULL);
 //	VirtualProtect((void*) _g_ftOpenAs, sizeof(DWORD), oldFlag, &newFlag);
 
-DWORD FindProcessID(WCHAR* procName)
+BOOL JV_InjectNotepad(WCHAR* procName, WCHAR* dllFullPath)
+{
+	HANDLE hSnapShot = INVALID_HANDLE_VALUE;
+	PROCESSENTRY32W pe;
+	BOOL result;
+
+	// Get the snapshot of the system
+	pe.dwSize = sizeof(PROCESSENTRY32W);
+	hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+
+	// find process
+	if (!Process32FirstW(hSnapShot, &pe))
+	{
+		fprintf(stderr, "[ERR] Process32FirstW() failed\nError Code : %lu\n\n", GetLastError());
+		return FALSE;
+	}
+
+	do
+	{
+		if (StrCmpIW(procName, pe.szExeFile) == 0)
+		{
+			result = JV_InjectDLL(pe.th32ProcessID, dllFullPath);
+			if (result)
+				printf("[%5lu] Inject Success\n", pe.th32ProcessID);
+			else
+				printf("[%5lu] Inject Failed\n", pe.th32ProcessID);
+		}
+	}
+	while (Process32NextW(hSnapShot, &pe));
+	CloseHandle(hSnapShot);
+
+	return TRUE;
+}
+
+
+DWORD JV_FindProcessID(WCHAR* procName)
 {
 	DWORD dwPID = 0;
 	HANDLE hSnapShot = INVALID_HANDLE_VALUE;
@@ -90,7 +128,7 @@ DWORD FindProcessID(WCHAR* procName)
 	// find process
 	if (!Process32FirstW(hSnapShot, &pe))
 	{
-		fprintf(stderr, "Cannot find first Process, Error Code : %lu\n", GetLastError());
+		fprintf(stderr, "[ERR] Process32FirstW() failed\nError Code : %lu\n\n", GetLastError());
 		exit(1);
 	}
 
@@ -140,7 +178,7 @@ BOOL JV_GetDebugPrivilege()
 
     if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
     {
-        fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\n\n");
+        fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\nTry running this program with Administrator Privilege.\n\n");
         return FALSE;
     }
     CloseHandle(hToken);
@@ -148,3 +186,33 @@ BOOL JV_GetDebugPrivilege()
     return TRUE;
 }
 
+BOOL JV_SetHook(WCHAR* procName, WCHAR* dllFullPath)
+{
+	HMODULE hDll = INVALID_HANDLE_VALUE;
+	fp_HookStart_t JV_HookStart = NULL;
+	fp_HookStop_t JV_HookStop = NULL;
+
+	hDll = LoadLibraryW(dllFullPath);
+	if (!hDll)
+	{
+		fprintf(stderr, "[ERR] LoadLibrary() failed\nError Code : %lu\n\n", GetLastError());
+		return FALSE;
+	}
+
+	JV_HookStart = (fp_HookStart_t) GetProcAddress(hDll, "JV_HookStart");
+	JV_HookStop = (fp_HookStop_t) GetProcAddress(hDll, "JV_HookStop");
+	if (!JV_HookStart || !JV_HookStop)
+	{
+		fprintf(stderr, "[ERR] GetProcAddress() failed\nError Code : %lu\n\n", GetLastError());
+		return FALSE;
+	}
+
+	JV_HookStart();
+	printf("Hooking Notepad.exe\nPress Enter to Exit...\n");
+	getchar();
+	JV_HookStop();
+
+	FreeLibrary(hDll);
+
+	return TRUE;
+}

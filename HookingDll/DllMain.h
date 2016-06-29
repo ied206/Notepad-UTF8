@@ -20,7 +20,8 @@ extern "C"
 {
 #endif
 
-// void DLL_EXPORT SomeFunction(const LPCSTR sometext);
+BOOL DLL_EXPORT JV_HookStart();
+BOOL DLL_EXPORT JV_HookStop();
 
 #ifdef __cplusplus
 }

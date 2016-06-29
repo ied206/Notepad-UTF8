@@ -1,25 +1,6 @@
-#define UNICODE
-#define _UNICODE
-#define _WIN32_WINNT 0x0501
-#define MAX_BUF_LEN 32767
+#include "Var.h"
 
-#define JV_CMP_L    1
-#define JV_CMP_LE   2
-#define JV_CMP_E    3
-#define JV_CMP_GE   4
-#define JV_CMP_G    5
-#define JV_CMP_L1 1
-#define JV_CMP_L2 2
-#define JV_CMP_L3 3
-#define JV_CMP_L4 4
-#define JV_CMP_BMAJOR 0x10000
-#define JV_CMP_VMINOR 0x100000000
-#define JV_CMP_VMAJOR 0x1000000000000
-
-
-#include <stdio.h>
 #include <stdint.h>
-#include <string.h>
 
 #include <windows.h>
 #include <tlhelp32.h>
@@ -29,13 +10,7 @@
 #include "DllMain.h"
 #include "MinHook.h"
 
-typedef struct
-{
-	WORD major;
-	WORD minor;
-	WORD bMajor;
-	WORD bMinor;
-} JV_WIN_VER;
+
 BOOL JV_Hook(DWORD isNotepad);
 BOOL JV_IsThisProcessNotepad();
 BOOL JV_GetHostVer(JV_WIN_VER* winVer);
@@ -45,11 +20,14 @@ BOOL JV_CompareWinVer(JV_WIN_VER* winVer, DWORD op, DWORD effective, WORD major,
 BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, JV_WIN_VER* winVer, DWORD hostArch);
 BYTE* JV_GetBaseAddress(DWORD dwPID);
 BOOL JV_GetDebugPrivilege();
+LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 
+HHOOK g_hProcHook = NULL;
+HINSTANCE g_hInstance = NULL;
 
 
-extern DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     DWORD isNotepad = 0;
 
@@ -57,6 +35,7 @@ extern DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPV
     {
         case DLL_PROCESS_ATTACH:
             // return FALSE to fail DLL load
+            g_hInstance = hinstDLL;
             isNotepad = JV_IsThisProcessNotepad();
             if (!JV_Hook(isNotepad))
                 return FALSE;
@@ -96,7 +75,7 @@ BOOL JV_Hook(DWORD isNotepad)
         if (_g_ftOpenAs == NULL)
             return FALSE; // Non supported OS
 
-        // g_ftOpenAs is in .data segmen, which is Read/Write.
+        // g_ftOpenAs is in .data segment, which is Read/Write.
         // Unable to write? it must be wrong address
         // -1 : New file
         //  0 : Opened with ANSI
@@ -218,22 +197,23 @@ BOOL JV_CompareWinVer(JV_WIN_VER* wv, DWORD op, DWORD effective, WORD major, WOR
     if (!(1 <= effective && effective <= 4))
         return FALSE;
 
-    op_wv = (wv->major * JV_CMP_VMAJOR) + (wv->minor * JV_CMP_VMINOR) + (wv->bMajor * JV_CMP_BMAJOR) + wv->bMinor;
-    op_cmp = (major * JV_CMP_VMAJOR) + (minor * JV_CMP_VMINOR) + (bMajor * JV_CMP_BMAJOR) + bMinor;
-
     switch (effective)
     {
     case 1:
-        op_wv /= JV_CMP_VMAJOR;
-        op_cmp /= JV_CMP_VMAJOR;
+        op_wv = wv->major;
+        op_cmp = major;
         break;
     case 2:
-        op_wv /= JV_CMP_VMINOR;
-        op_cmp /= JV_CMP_VMINOR;
+        op_wv = (wv->major * JV_CMP_MUL_L1) + wv->minor;
+        op_cmp = (major * JV_CMP_MUL_L1) + minor;
         break;
     case 3:
-        op_wv /= JV_CMP_BMAJOR;
-        op_cmp /= JV_CMP_BMAJOR;
+        op_wv = (wv->major * JV_CMP_MUL_L2) + (wv->minor * JV_CMP_MUL_L1) + wv->bMajor;
+        op_cmp = (major * JV_CMP_MUL_L2) + (minor * JV_CMP_MUL_L1) + bMajor;
+        break;
+    case 4:
+        op_wv = (wv->major * JV_CMP_MUL_L3) + (wv->minor * JV_CMP_MUL_L2) + (wv->bMajor * JV_CMP_MUL_L1) + wv->bMinor;
+        op_cmp = (major * JV_CMP_MUL_L3) + (minor * JV_CMP_MUL_L2) + (bMajor * JV_CMP_MUL_L1) + bMinor;
         break;
     }
 
@@ -366,7 +346,7 @@ BOOL JV_GetDebugPrivilege()
     pToken.Privileges[0].Luid = luid;
     pToken.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, sizeof(TOKEN_PRIVILEGES), (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
+    if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, 0, (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
     {
         fprintf(stderr, "[ERR] AdjustTokenPrivileges() failed\nError Code : %lu\n\n", GetLastError());
         return FALSE;
@@ -424,3 +404,48 @@ BYTE* JV_GetBaseAddress(DWORD dwPID)
     return (BYTE*) procBaseAddr;
 }
 
+
+/// SetWindowsHookEx
+BOOL DLL_EXPORT JV_HookStart()
+{
+	g_hProcHook = SetWindowsHookExW(WH_CBT, JV_CBTProc, g_hInstance, 0);
+	if (!g_hProcHook)
+        return FALSE;
+    return TRUE;
+}
+
+BOOL DLL_EXPORT JV_HookStop()
+{
+    if (g_hProcHook)
+    {
+        if (!UnhookWindowsHookEx(g_hProcHook))
+        {
+            g_hProcHook = NULL;
+            return FALSE;
+        }
+        else
+            return TRUE;
+    }
+    else
+        return FALSE;
+}
+
+LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    /*
+    HWND hWnd;
+    DWORD dwPID = 0;
+	printf("nCode : %d\n", nCode);
+
+	switch (nCode)
+	{
+	case HCBT_CREATEWND:
+		hWnd = (HWND) wParam;
+		GetWindowThreadProcessId(hWnd, &dwPID);
+		JV_InjectDLL(dwPID, dllFullPath);
+		break;
+	}
+	*/
+
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
