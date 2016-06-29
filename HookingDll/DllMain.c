@@ -81,10 +81,9 @@ BOOL JV_Hook(DWORD isNotepad)
     if (isNotepad) // Notepad.exe!
     { // Set _g_ft_OpenAs to 3 (UTF-8) from -1 (Init Value)
         BYTE* procBaseAddr = NULL;
-        BYTE* _g_ftOpenAs = NULL;
+        DWORD* _g_ftOpenAs = NULL;
         JV_WIN_VER winVer;
         DWORD hostArch;
-        BYTE srcByte[4] = {0x03, 0x00, 0x00, 0x00}; // UTF-8
 
         procBaseAddr = JV_GetBaseAddress(GetProcessId(GetCurrentProcess()));
         if (!JV_GetHostVer(&winVer))
@@ -93,13 +92,19 @@ BOOL JV_Hook(DWORD isNotepad)
         if (!hostArch)
             return FALSE;
 
-        _g_ftOpenAs = JV_GetNotepadOpenAsAddr(procBaseAddr, &winVer, hostArch);
+        _g_ftOpenAs = (DWORD*) JV_GetNotepadOpenAsAddr(procBaseAddr, &winVer, hostArch);
         if (_g_ftOpenAs == NULL)
             return FALSE; // Non supported OS
 
-        // g_ftOpenAs is in .data segment - it's page is already Read/Write by default
-        if (*((DWORD*)_g_ftOpenAs) == 0xFFFFFFFF) // default value - it's new file, not opened nor saved
-            memcpy((void*)_g_ftOpenAs, &srcByte, sizeof(DWORD));
+        // g_ftOpenAs is in .data segmen, which is Read/Write.
+        // Unable to write? it must be wrong address
+        // -1 : New file
+        //  0 : Opened with ANSI
+        //  1 : Opened with UTF16_LE
+        //  2 : Opened with UTF16_BE
+        //  3 : Opened with UTF8
+        if (*_g_ftOpenAs == 0xFFFFFFFF) // default value - it's new file, not opened nor saved
+            *_g_ftOpenAs = 0x03;
 
         return TRUE;
     }
