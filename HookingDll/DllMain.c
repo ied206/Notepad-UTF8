@@ -1,95 +1,68 @@
-#include <windows.h>
+#define UNICODE
+#define _UNICODE
+#define _WIN32_WINNT 0x0501
+#define MAX_BUF_LEN 32767
+
+#define JV_CMP_L    1
+#define JV_CMP_LE   2
+#define JV_CMP_E    3
+#define JV_CMP_GE   4
+#define JV_CMP_G    5
+#define JV_CMP_L1 1
+#define JV_CMP_L2 2
+#define JV_CMP_L3 3
+#define JV_CMP_L4 4
+#define JV_CMP_BMAJOR 0x10000
+#define JV_CMP_VMINOR 0x100000000
+#define JV_CMP_VMAJOR 0x1000000000000
+
+
 #include <stdio.h>
 #include <stdint.h>
-#include "main.h"
+#include <string.h>
+
+#include <windows.h>
+#include <tlhelp32.h>
+#include <shlwapi.h>
+#include <strsafe.h>
+
+#include "DllMain.h"
 #include "MinHook.h"
 
-typedef WINBOOL (WINAPI *GETSAVEFILENAMEW)(LPOPENFILENAME);
-// typedef UINT_PTR (CALLBACK WINAPI *OFNHOOKPROC)(HWND, UINT, WPARAM, LPARAM);;
-
-// Pointer for calling original GetSaveFileNameW.
-GETSAVEFILENAMEW fpGetSaveFileNameW = NULL;
-LPOFNHOOKPROC fpSaveDialogHookProc = NULL;
-
-UINT_PTR CALLBACK DetourSaveDialogHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+typedef struct
 {
-	// 0x20 : ANSI, 0x21 : UTF-16 LE, 0x22 : UTF-16 BE, 0x23 : UTF-8
-    return fpSaveDialogHookProc(hdlg, uiMsg, wParam, 0x23);
-}
+	WORD major;
+	WORD minor;
+	WORD bMajor;
+	WORD bMinor;
+} JV_WIN_VER;
+BOOL JV_Hook(DWORD isNotepad);
+BOOL JV_IsThisProcessNotepad();
+BOOL JV_GetHostVer(JV_WIN_VER* winVer);
+DWORD JV_GetHostArch();
+DWORD JV_GetProcArch();
+BOOL JV_CompareWinVer(JV_WIN_VER* winVer, DWORD op, DWORD effective, WORD major, WORD minor, WORD bMajor, WORD bMinor);
+BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, JV_WIN_VER* winVer, DWORD hostArch);
+BYTE* JV_GetBaseAddress(DWORD dwPID);
+BOOL JV_GetDebugPrivilege();
 
-// Detour function which overrides GetSaveFileNameW.
-BOOL WINAPI DetourGetSaveFileNameW(LPOPENFILENAME lpofn)
-{
-    MessageBoxW(NULL, L"Hooked", L"Hooked", MB_OK);
-	fpSaveDialogHookProc = lpofn->lpfnHook;
-	lpofn->lpfnHook = DetourSaveDialogHookProc;
-	lpofn->Flags = lpofn->Flags & ~OFN_ENABLEHOOK;
-    return fpGetSaveFileNameW(lpofn);
-}
 
-void GetDebugPrivilege()
-{
-    HANDLE hCurrent = GetCurrentProcess();
-    HANDLE hToken;
-    TOKEN_PRIVILEGES newState, prevState;
-    DWORD retLen;
-    LUID luid;
-
-    OpenProcessToken(hCurrent, TOKEN_ADJUST_PRIVILEGES, &hToken);
-    newState.PrivilegeCount = 1;
-    newState.Privileges[0].Luid = luid;
-    newState.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-    AdjustTokenPrivileges(hToken, FALSE, &newState, sizeof(TOKEN_PRIVILEGES), &prevState, &retLen);
-    CloseHandle(hToken);
-
-}
 
 
 extern DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    // DWORD* _g_ftSaveAs = (DWORD*) 0x0041E400;
-    DWORD* _g_ftSaveAs = (DWORD*) 0x0140024A00;
-    DWORD src = 3;
-    DWORD oldFlag, newFlag;
-    // uint8_t* p = (uint8_t*) 0x0140024A00;
-    char stmp[128];
+    DWORD isNotepad = 0;
+
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            // attach to process
-            if (MH_Initialize() != MH_OK)
-                exit(1);
-            if (MH_CreateHook((LPVOID) &GetSaveFileNameW, (LPVOID) &DetourGetSaveFileNameW, (LPVOID*)(&fpGetSaveFileNameW)) != MH_OK)
-                exit(1);
-            if (MH_EnableHook((LPVOID) &GetSaveFileNameW) != MH_OK)
-                exit(1);
             // return FALSE to fail DLL load
-            GetDebugPrivilege();
-            if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
-            {
-                 MessageBoxA(NULL, "Failed", "alert", MB_OK);
-            }
-            *_g_ftSaveAs = 3;
-            // VirtualProtect(_g_ftSaveAs, sizeof(DWORD), PAGE_EXECUTE_READWRITE, &oldFlag);
-            // memcpy((void*)_g_ftSaveAs, &src, sizeof(DWORD));
-            // VirtualProtect(_g_ftSaveAs, sizeof(DWORD), oldFlag, &newFlag);
-            MessageBoxA(NULL, "Success", "alert", MB_OK);
-            /*
-            asm(
-                ".intel_syntax noprefix;\n"
-                "push esi;\n"
-                "mov esi,0x0041E400;\n"
-                "mov [esi],3;\n"
-                "pop esi;\n"
-            );
-            */
+            isNotepad = JV_IsThisProcessNotepad();
+            if (!JV_Hook(isNotepad))
+                return FALSE;
             break;
         case DLL_PROCESS_DETACH:
             // detach from process
-            if (MH_DisableHook((LPVOID) &GetSaveFileNameW) != MH_OK)
-                exit(1);
-            if (MH_Uninitialize() != MH_OK)
-                exit(1);
             break;
 
         case DLL_THREAD_ATTACH:
@@ -103,4 +76,346 @@ extern DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPV
     return TRUE; // succesful
 }
 
+BOOL JV_Hook(DWORD isNotepad)
+{
+    if (isNotepad) // Notepad.exe!
+    { // Set _g_ft_OpenAs to 3 (UTF-8) from -1 (Init Value)
+        BYTE* procBaseAddr = NULL;
+        BYTE* _g_ftOpenAs = NULL;
+        JV_WIN_VER winVer;
+        DWORD hostArch;
+        BYTE srcByte[4] = {0x03, 0x00, 0x00, 0x00}; // UTF-8
+
+        procBaseAddr = JV_GetBaseAddress(GetProcessId(GetCurrentProcess()));
+        if (!JV_GetHostVer(&winVer))
+            return FALSE;
+        hostArch = JV_GetHostArch();
+        if (!hostArch)
+            return FALSE;
+
+        _g_ftOpenAs = JV_GetNotepadOpenAsAddr(procBaseAddr, &winVer, hostArch);
+        if (_g_ftOpenAs == NULL)
+            return FALSE; // Non supported OS
+
+        // g_ftOpenAs is in .data segment - it's page is already Read/Write by default
+        if (*((DWORD*)_g_ftOpenAs) == 0xFFFFFFFF) // default value - it's new file, not opened nor saved
+            memcpy((void*)_g_ftOpenAs, &srcByte, sizeof(DWORD));
+
+        return TRUE;
+    }
+    else // This process is not Notepad.exe
+    { // Hook CreateProcessA, CreateProcessW..?
+        /*
+        if (MH_Initialize() != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_Initialize() failed\n\n");
+            return FALSE;
+        }
+        */
+    }
+
+    return TRUE;
+
+}
+
+BOOL JV_IsThisProcessNotepad()
+{
+    // %windir%\system32\notepad.exe
+    WCHAR procPath[MAX_PATH];
+    WCHAR cmpPath[MAX_PATH];
+    WCHAR winPath[MAX_BUF_LEN];
+    GetModuleFileName(NULL, procPath, MAX_PATH);
+    procPath[MAX_PATH-1] = '\0'; // For Win XP
+
+    GetEnvironmentVariableW(L"windir", winPath, MAX_BUF_LEN);
+    StringCbPrintfW(cmpPath, MAX_PATH, L"%s\\system32\\notepad.exe", winPath);
+    if (StrCmpIW(procPath, cmpPath) == 0)
+        return TRUE;
+    else
+    {
+        StringCbPrintfW(cmpPath, MAX_PATH, L"%s\\notepad.exe", winPath);
+        if (StrCmpIW(procPath, cmpPath) != 0)
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL JV_GetHostVer(JV_WIN_VER* winVer)
+{
+    DWORD fileVerBufSize = 0;
+    UINT fileVerQueryValueSize = 0;
+    VOID* fileVerBuf = NULL;
+    VS_FIXEDFILEINFO* fileVerQueryValue = NULL;
+
+    fileVerBufSize = GetFileVersionInfoSizeW(L"kernel32.dll", NULL);
+    if (!fileVerBufSize)
+	{
+		fprintf(stderr, "[ERR] GetFileVersionInfoSizeW failed\nError Code : %lu\n\n", GetLastError());
+		return FALSE;
+	}
+    fileVerBuf = (LPVOID) malloc(fileVerBufSize);
+    GetFileVersionInfoW(L"kernel32.dll", 0, fileVerBufSize, fileVerBuf);
+    VerQueryValueW(fileVerBuf, L"\\", (LPVOID*) &fileVerQueryValue, &fileVerQueryValueSize);
+    winVer->major = fileVerQueryValue->dwFileVersionMS / 0x10000;
+    winVer->minor = fileVerQueryValue->dwFileVersionMS % 0x10000;
+    winVer->bMajor = fileVerQueryValue->dwFileVersionLS / 0x10000;
+    winVer->bMinor = fileVerQueryValue->dwFileVersionLS % 0x10000;
+    free(fileVerBuf);
+
+    return TRUE;
+}
+
+DWORD JV_GetHostArch()
+{
+    BOOL isWOW64;
+    SYSTEM_INFO sysInfo;
+
+    GetNativeSystemInfo(&sysInfo);
+    switch (sysInfo.wProcessorArchitecture)
+    {
+    case PROCESSOR_ARCHITECTURE_INTEL: // x86
+        if (!GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process"))
+            return 32; // No WOW64, in fact it must be Windows XP SP1
+        if (!IsWow64Process(GetCurrentProcess(), &isWOW64))
+        {
+            fprintf(stderr, "[ERR] IsWow64Process() failed\nError Code : %lu\n\n", GetLastError());
+            return FALSE;
+        }
+        if (isWOW64)
+            return 64;
+        else
+            return 32;
+        break;
+    case PROCESSOR_ARCHITECTURE_AMD64: // x64
+        return 64;
+        break;
+    }
+
+    return 0;
+}
+
+DWORD JV_GetProcArch()
+{
+    if (sizeof(void*) == 8)
+        return 64;
+    else if (sizeof(void*) == 4)
+        return 32;
+    return 0;
+}
+
+BOOL JV_CompareWinVer(JV_WIN_VER* wv, DWORD op, DWORD effective, WORD major, WORD minor, WORD bMajor, WORD bMinor)
+{
+    BOOL result = FALSE;
+    uint64_t op_wv = 0;
+    uint64_t op_cmp = 0;
+
+    if (!(1 <= effective && effective <= 4))
+        return FALSE;
+
+    op_wv = (wv->major * JV_CMP_VMAJOR) + (wv->minor * JV_CMP_VMINOR) + (wv->bMajor * JV_CMP_BMAJOR) + wv->bMinor;
+    op_cmp = (major * JV_CMP_VMAJOR) + (minor * JV_CMP_VMINOR) + (bMajor * JV_CMP_BMAJOR) + bMinor;
+
+    switch (effective)
+    {
+    case 1:
+        op_wv /= JV_CMP_VMAJOR;
+        op_cmp /= JV_CMP_VMAJOR;
+        break;
+    case 2:
+        op_wv /= JV_CMP_VMINOR;
+        op_cmp /= JV_CMP_VMINOR;
+        break;
+    case 3:
+        op_wv /= JV_CMP_BMAJOR;
+        op_cmp /= JV_CMP_BMAJOR;
+        break;
+    }
+
+    switch (op)
+    {
+    case JV_CMP_L:
+        if (op_cmp < op_wv)
+            result = TRUE;
+        break;
+    case JV_CMP_LE:
+        if (op_cmp <= op_wv)
+            result = TRUE;
+        break;
+    case JV_CMP_E:
+        if (op_cmp == op_wv)
+            result = TRUE;
+        break;
+    case JV_CMP_GE:
+        if (op_cmp >= op_wv)
+            result = TRUE;
+        break;
+    case JV_CMP_G:
+        if (op_cmp > op_wv)
+            result = TRUE;
+        break;
+    }
+
+    return result;
+}
+
+// Provide VA from RVA
+BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, JV_WIN_VER* winVer, DWORD hostArch)
+{
+    if (hostArch == 32)
+    {
+        // XP x86 SP3
+        // _g_ftOpenAS = Base + 0x9030
+        // _g_ftSaveAS = Base + 0xA528
+        if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 5, 1, 2600, 5512))
+            return baseAddr + 0x9030;
+        // Vista x86 SP2
+        // _g_ftOpenAS = Base + 0xA00C
+        // _g_ftSaveAS = Base + 0xC000
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 0, 6001, 18000))
+            return baseAddr + 0xA00C;
+        // 7 x86 SP1 (Tested)
+        // _g_ftOpenAS = Base + 0xC00C
+        // _g_ftSaveAS = Base + 0xE040
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 1, 7600, 16385))
+            return baseAddr + 0xC00C;
+        // 8 x86 SP2
+        // _g_ftOpenAS = Base + 0x1D008
+        // _g_ftSaveAS = Base + 0x1F364
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 2, 9200, 16384))
+            return baseAddr + 0x1D008;
+        // 8.1 x86 Update 1
+        // _g_ftOpenAS = Base + 0x17008
+        // _g_ftSaveAS = Base + 0x19304
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 3, 9600, 17415))
+            return baseAddr + 0x17008;
+        // 10.0.10240 x86
+        // _g_ftOpenAS = Base + 0x17108
+        // _g_ftSaveAS = Base + 0x19260
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10240, 16384))
+            return baseAddr + 0x17108;
+        // 10 x86 (10.0.10586, 10.0.10240)
+        // _g_ftOpenAS = Base + 0x1C138
+        // _g_ftSaveAS = Base + 0x1E400
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10586, 0))
+            return baseAddr + 0x1C138;
+    }
+    else if (hostArch == 64)
+    {
+        // Vista x64 SP2
+        // _g_ftOpenAS = Base + 0x10558
+        // _g_ftSaveAS = Base + 0x120B0
+        if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 0, 6001, 18000))
+            return baseAddr + 0x10558;
+        // 7 x64 SP1
+        // _g_ftOpenAS = Base + 0x10088
+        // _g_ftSaveAS = Base + 0x12720
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 1, 7600, 16385))
+            return baseAddr + 0x10088;
+        // 8 x64
+        // _g_ftOpenAS = Base + 0x1F00C
+        // _g_ftSaveAS = Base + 0x21AE8
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 2, 9200, 16384))
+            return baseAddr + 0x1F00C;
+        // 8.1 x64 Update 1
+        // _g_ftOpenAS = Base + 0x1A00C
+        // _g_ftSaveAS = Base + 0x1C848
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 3, 9600, 17415))
+            return baseAddr + 0x1A00C;
+        // 10.0.10240 x64
+        // _g_ftOpenAS = Base + 0x1B220
+        // _g_ftSaveAS = Base + 0x1D7A0
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10240, 16384))
+            return baseAddr + 0x1B220;
+        // 10.0.10586 x64 (Tested)
+        // _g_ftOpenAS = Base + 0x22260
+        // _g_ftSaveAS = Base + 0x24A00
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10586, 0))
+            return baseAddr + 0x22260;
+    }
+
+    return NULL;
+}
+
+
+BOOL JV_GetDebugPrivilege()
+{
+    HANDLE hProcess = GetCurrentProcess();
+    HANDLE hToken;
+    TOKEN_PRIVILEGES pToken;
+    LUID luid;
+
+    if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+    {
+        fprintf(stderr, "[ERR] OpenProcessToken() failed\nError Code : %lu\n\n", GetLastError());
+        return FALSE;
+    }
+
+    if (!LookupPrivilegeValueW(NULL, L"SeDebugPrivilege", &luid))
+    {
+        fprintf(stderr, "[ERR] LookupPrivilegeValue() failed\nError Code : %lu\n\n", GetLastError());
+        return FALSE;
+    }
+
+    pToken.PrivilegeCount = 1;
+    pToken.Privileges[0].Luid = luid;
+    pToken.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, sizeof(TOKEN_PRIVILEGES), (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
+    {
+        fprintf(stderr, "[ERR] AdjustTokenPrivileges() failed\nError Code : %lu\n\n", GetLastError());
+        return FALSE;
+    }
+
+    if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+    {
+        fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\n\n");
+        return FALSE;
+    }
+    CloseHandle(hToken);
+
+    return TRUE;
+}
+
+// Get BaseAddress of this Process
+BYTE* JV_GetBaseAddress(DWORD dwPID)
+{
+    HANDLE hModule = INVALID_HANDLE_VALUE;
+    MODULEENTRY32W me;
+    void* procBaseAddr = (void*) 0;
+
+    // Take snapshot of moudles in this process
+    hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
+    if (hModule == INVALID_HANDLE_VALUE)
+    {
+    	fprintf(stderr, "[ERR] CreateToolhelp32Snapshot() failed\nError Code : %lu\n\n", GetLastError());
+    	return 0;
+    }
+
+    // Set me.dwSize
+    me.dwSize = sizeof(MODULEENTRY32W);
+
+    // Get Info of first module
+    if (!Module32First(hModule, &me))
+    {
+    	fprintf(stderr, "[ERR] Molule32First() failed\nError Code : %lu\n\n", GetLastError());
+    	return 0;
+    }
+
+	// Iterate modules
+	do
+	{
+		// Get base address
+		if (me.th32ProcessID == dwPID)
+		{
+			procBaseAddr = (void*) me.modBaseAddr;
+			break;
+		}
+	}
+	while (Module32Next(hModule, &me));
+    // Close Snapshot
+    CloseHandle(hModule);
+
+    return (BYTE*) procBaseAddr;
+}
 

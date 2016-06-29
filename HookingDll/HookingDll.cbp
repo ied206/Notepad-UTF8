@@ -80,6 +80,7 @@
 		<Linker>
 			<Add library="user32" />
 			<Add library="comdlg32" />
+			<Add library="shlwapi" />
 		</Linker>
 		<Unit filename="DllMain.c">
 			<Option compilerVar="CPP" />

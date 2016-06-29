@@ -7,16 +7,12 @@
  *  in your project.
  */
 
-#define JV32_BASE_ADDR 0x00400000
-#define JV32_SAVE_AS_OFS 0x0010E400
-#define JV64_BASE_ADDR 0x140000000
-#define JV64_SAVE_AS_OFS 0x0024A00
-
 #ifdef BUILD_DLL
     #define DLL_EXPORT __declspec(dllexport)
 #else
     #define DLL_EXPORT __declspec(dllimport)
 #endif
+
 
 
 #ifdef __cplusplus
