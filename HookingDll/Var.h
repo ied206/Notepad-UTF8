@@ -29,4 +29,45 @@ typedef struct
 	WORD bMinor;
 } JV_WIN_VER;
 
+
+typedef BOOL (WINAPI *CREATEPROCESSA) (
+	LPCSTR                lpApplicationName,
+	LPSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation);
+
+typedef BOOL (WINAPI *CREATEPROCESSW) (
+	LPCWSTR                lpApplicationName,
+	LPWSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCWSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation);
+
+typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
+    PHANDLE ThreadHandle,
+    ACCESS_MASK DesiredAccess,
+    LPVOID ObjectAttributes,
+    HANDLE ProcessHandle,
+    LPTHREAD_START_ROUTINE lpStartAddress,
+    LPVOID lpParameter,
+    BOOL CreateSuspended,
+    DWORD dwStackSize,
+    LPVOID Unknown1,
+    LPVOID Unknown2,
+    LPVOID Unknown3);
+
+
 #endif // VAR_H_INCLUDED
+
+

@@ -15,15 +15,16 @@
 #include "Host.h"
 #include "BasicIO.h"
 
-BOOL JV_GetDllFullPath(WCHAR* dllFullPath);
+WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath);
+BOOL JV_GetDllName(WCHAR** dllName);
 
 int main(int argc, char* argv[])
 {
 	WCHAR dllFullPath[MAX_PATH];
-	WCHAR* procName = L"notepad.exe";
+	WCHAR* dllName = NULL;
 	DWORD procArch = JV_GetProcArch();
 
-
+	JV_GetDllName(&dllName);
 	// Get Debug Privilege
 	// return FALSE if failed
 	// JV_GetDebugPrivilege();
@@ -44,30 +45,37 @@ int main(int argc, char* argv[])
 	printf("dll path : %S\n", dllFullPath);
 
 	// Hook running notepad
-	// JV_InjectNotepad(procName, g_dllFullPath);
+	// JV_InjectNotepad(L"notepad.exe", dllFullPath);
 
-	// Set Message Hook
-	JV_SetHook(procName, dllFullPath);
-
+	// Set Global Hooking
+	// JV_InjectAll(dllFullPath);
+	JV_EjectAll(dllName);
 
 	return 0;
 }
 
-BOOL JV_GetDllFullPath(WCHAR* dllFullPath)
+WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath)
 {
-	DWORD procArch = 0;
+	WCHAR* dllName = NULL;
+	JV_GetDllName(&dllName);
 
 	GetCurrentDirectoryW(MAX_PATH, dllFullPath);
-	procArch = JV_GetProcArch();
+	StringCchCatW(dllFullPath, MAX_PATH, L"\\");
+	StringCchCatW(dllFullPath, MAX_PATH, dllName);
+
+	return dllFullPath;
+}
+
+BOOL JV_GetDllName(WCHAR** dllName)
+{
+	DWORD procArch = JV_GetProcArch();
 	switch (procArch)
 	{
 	case 32:
-		StringCchCatW(dllFullPath, MAX_PATH, L"\\");
-		StringCchCatW(dllFullPath, MAX_PATH, DLL_NAME_32);
+		*dllName = DLL_NAME_32;
 		break;
 	case 64:
-		StringCchCatW(dllFullPath, MAX_PATH, L"\\");
-		StringCchCatW(dllFullPath, MAX_PATH, DLL_NAME_64);
+		*dllName = DLL_NAME_64;
 		break;
 	default:
 		fprintf(stderr, "[ERR] Unknown Windows Architecture\n\n");

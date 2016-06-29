@@ -10,8 +10,8 @@
 #include "DllMain.h"
 #include "MinHook.h"
 
-
 BOOL JV_Hook(DWORD isNotepad);
+BOOL JV_UnHook(DWORD isNotepad);
 BOOL JV_IsThisProcessNotepad();
 BOOL JV_GetHostVer(JV_WIN_VER* winVer);
 DWORD JV_GetHostArch();
@@ -20,12 +20,37 @@ BOOL JV_CompareWinVer(JV_WIN_VER* winVer, DWORD op, DWORD effective, WORD major,
 BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, JV_WIN_VER* winVer, DWORD hostArch);
 BYTE* JV_GetBaseAddress(DWORD dwPID);
 BOOL JV_GetDebugPrivilege();
+BOOL JV_InjectDLL_by_Handle(HANDLE hProcess, WCHAR *szDllPath);
 LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
+BOOL WINAPI MyCreateProcessA(
+	LPCSTR                lpApplicationName,
+	LPSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation);
+BOOL WINAPI MyCreateProcessW(
+	LPCWSTR                lpApplicationName,
+	LPWSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCWSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation);
 
 
 HHOOK g_hProcHook = NULL;
 HINSTANCE g_hInstance = NULL;
 
+CREATEPROCESSA fpCreateProcessA = NULL;
+CREATEPROCESSW fpCreateProcessW = NULL;
 
 extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -42,6 +67,8 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason,
             break;
         case DLL_PROCESS_DETACH:
             // detach from process
+            isNotepad = JV_IsThisProcessNotepad();
+            JV_UnHook(isNotepad);
             break;
 
         case DLL_THREAD_ATTACH:
@@ -88,19 +115,70 @@ BOOL JV_Hook(DWORD isNotepad)
         return TRUE;
     }
     else // This process is not Notepad.exe
-    { // Hook CreateProcessA, CreateProcessW..?
-        /*
+    { // Hook CreateProcessA, CreateProcessW
         if (MH_Initialize() != MH_OK)
         {
             fprintf(stderr, "[ERR] MH_Initialize() failed\n\n");
             return FALSE;
         }
-        */
+
+        if (MH_CreateHook((LPVOID) &CreateProcessA, (LPVOID) &MyCreateProcessA, (LPVOID*) &fpCreateProcessA) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_CreateHook(&CreateProcessA) failed\n\n");
+            return FALSE;
+        }
+        if (MH_CreateHook((LPVOID) &CreateProcessW, (LPVOID) &MyCreateProcessW, (LPVOID*) &fpCreateProcessW) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_CreateHook(&CreateProcessW) failed\n\n");
+            return FALSE;
+        }
+
+        if (MH_EnableHook((LPVOID) &CreateProcessA) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_EnableHook(&CreateProcessW) failed\n\n");
+            return FALSE;
+        }
+        if (MH_EnableHook((LPVOID) &CreateProcessW) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_EnableHook(&CreateProcessW) failed\n\n");
+            return FALSE;
+        }
     }
 
     return TRUE;
 
 }
+
+
+BOOL JV_UnHook(DWORD isNotepad)
+{
+    if (isNotepad) // Notepad.exe!
+    {
+    }
+    else // This process is not Notepad.exe
+    { // Unhook CreateProcessA, CreateProcessW
+        if (MH_DisableHook((LPVOID) &CreateProcessA) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_DisableHook(&CreateProcessW) failed\n\n");
+            return FALSE;
+        }
+        if (MH_DisableHook((LPVOID) &CreateProcessW) != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_DisableHook(&CreateProcessW) failed\n\n");
+            return FALSE;
+        }
+
+        if (MH_Uninitialize() != MH_OK)
+        {
+            fprintf(stderr, "[ERR] MH_Uninitialize() failed\n\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+
+}
+
 
 BOOL JV_IsThisProcessNotepad()
 {
@@ -118,7 +196,7 @@ BOOL JV_IsThisProcessNotepad()
     else
     {
         StringCbPrintfW(cmpPath, MAX_PATH, L"%s\\notepad.exe", winPath);
-        if (StrCmpIW(procPath, cmpPath) != 0)
+        if (StrCmpIW(procPath, cmpPath) == 0)
             return TRUE;
     }
 
@@ -404,8 +482,97 @@ BYTE* JV_GetBaseAddress(DWORD dwPID)
     return (BYTE*) procBaseAddr;
 }
 
+/// InjectDLL_by_Handle
+BOOL JV_InjectDLL_by_Handle(HANDLE hProcess, WCHAR *szDllPath)
+{
+	HANDLE hThread;
+	JV_WIN_VER winVer;
+	fp_NtCreateThreadEx_t fp_NtCreateThreadEx = NULL;
+	LPTHREAD_START_ROUTINE remoteThreadProc = NULL;
+	DWORD dwBufSize = 0;
+	void* remoteProcBuf = NULL;
 
-/// SetWindowsHookEx
+	if (!hProcess)
+		return FALSE;
+	JV_GetHostVer(&winVer);
+
+    dwBufSize = wcslen(szDllPath) * 2 + 1;
+    remoteProcBuf = VirtualAllocEx(hProcess, NULL, dwBufSize, MEM_COMMIT, PAGE_READWRITE);
+    if (!remoteProcBuf)
+		return FALSE;
+    WriteProcessMemory(hProcess, remoteProcBuf, (void*)szDllPath, dwBufSize, NULL);
+	remoteThreadProc = (LPTHREAD_START_ROUTINE) GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
+
+	if (JV_CompareWinVer(&winVer, JV_CMP_GE, JV_CMP_L2, 6, 0, 0, 0))
+	{ // Vista <= WinVer
+		fp_NtCreateThreadEx = (fp_NtCreateThreadEx_t) GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateThreadEx");
+		fp_NtCreateThreadEx(&hThread, 0x2000000, NULL, hProcess, remoteThreadProc, remoteProcBuf, FALSE, 0, NULL, NULL, NULL);
+	}
+	else
+	{ // 2000, XP
+		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, remoteProcBuf, 0, NULL);
+	}
+
+	WaitForSingleObject(hThread, INFINITE);
+	VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
+	if (!hThread)
+		return FALSE;
+
+	CloseHandle(hProcess);
+	CloseHandle(hThread);
+
+	return TRUE;
+}
+
+/// CreateProcessA, CreateProcessW Hooking
+BOOL WINAPI MyCreateProcessA(
+    LPCSTR                lpApplicationName,
+	LPSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation)
+{
+    BOOL result;
+    WCHAR modName[MAX_BUF_LEN];
+    result = fpCreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
+                            bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
+                            lpStartupInfo, lpProcessInformation);
+    GetModuleFileNameW(g_hInstance, modName, MAX_BUF_LEN);
+    if (result)
+        JV_InjectDLL_by_Handle(lpProcessInformation->hProcess, modName);
+    return result;
+
+}
+
+BOOL WINAPI MyCreateProcessW(
+	LPCWSTR                lpApplicationName,
+	LPWSTR                 lpCommandLine,
+	LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	BOOL                  bInheritHandles,
+	DWORD                 dwCreationFlags,
+	LPVOID                lpEnvironment,
+	LPCWSTR                lpCurrentDirectory,
+	LPSTARTUPINFO         lpStartupInfo,
+	LPPROCESS_INFORMATION lpProcessInformation)
+{
+    BOOL result;
+    WCHAR modName[MAX_BUF_LEN];
+    result = fpCreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
+                            bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
+                            lpStartupInfo, lpProcessInformation);
+    GetModuleFileNameW(g_hInstance, modName, MAX_BUF_LEN);
+    if (result)
+        JV_InjectDLL_by_Handle(lpProcessInformation->hProcess, modName);
+    return result;
+}
+
+/// SetWindowsHookEx - system becomes too slow
 BOOL DLL_EXPORT JV_HookStart()
 {
 	g_hProcHook = SetWindowsHookExW(WH_CBT, JV_CBTProc, g_hInstance, 0);
@@ -432,20 +599,5 @@ BOOL DLL_EXPORT JV_HookStop()
 
 LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    /*
-    HWND hWnd;
-    DWORD dwPID = 0;
-	printf("nCode : %d\n", nCode);
-
-	switch (nCode)
-	{
-	case HCBT_CREATEWND:
-		hWnd = (HWND) wParam;
-		GetWindowThreadProcessId(hWnd, &dwPID);
-		JV_InjectDLL(dwPID, dllFullPath);
-		break;
-	}
-	*/
-
-	return CallNextHookEx(NULL, nCode, wParam, lParam);
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }

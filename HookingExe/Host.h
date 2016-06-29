@@ -3,8 +3,6 @@
 
 #include <windows.h>
 
-
-
 #define JV_CMP_L    1
 #define JV_CMP_LE   2
 #define JV_CMP_E    3
