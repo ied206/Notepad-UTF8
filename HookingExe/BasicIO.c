@@ -64,37 +64,6 @@ void BinaryDump(const uint8_t buf[], const uint32_t bufsize)
 	return;
 }
 
-int WhatBitOS (int print) // 몇비트 컴파일인가 알아내기
-{
-    if (print)
-    {
-        if (sizeof(int*) == 4)
-        {
-            printf("This is 32bit Program!\n");
-            return 32;
-        }
-        else if (sizeof(int*) == 8)
-        {
-            printf("This is 64bit Program!\n");
-            return 64;
-        }
-        else
-        {
-			printf("This is %Iubit Program!\n", sizeof(int*) * 8);
-            return (sizeof(int*) * 8);
-        }
-    }
-    else
-    {
-        if (sizeof(int*) == 4)
-            return 32;
-        else if (sizeof(int*) == 8)
-            return 64;
-        else
-            return (sizeof(int*) * 8);
-    }
-}
-
 int BytePrefix (int sizelen)
 {
 	int whatbyte;

@@ -16,7 +16,7 @@
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add option="-DBUILD_DLL" />
+					<Add option="-D_DEBUG" />
 				</Compiler>
 				<Linker>
 					<Add library="../minhook/libMinHook_x86.a" />
@@ -32,7 +32,6 @@
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-Wall" />
-					<Add option="-DBUILD_DLL" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -49,7 +48,7 @@
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add option="-DBUILD_DLL" />
+					<Add option="-D_DEBUG" />
 				</Compiler>
 				<Linker>
 					<Add library="../minhook/libMinHook_x64.a" />
@@ -66,7 +65,6 @@
 					<Add option="-O2" />
 					<Add option="-Wall" />
 					<Add option="-masm=intel" />
-					<Add option="-DBUILD_DLL" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -75,11 +73,11 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-DBUILD_DLL" />
 			<Add directory="../minhook/include" />
 		</Compiler>
 		<Linker>
 			<Add library="user32" />
-			<Add library="comdlg32" />
 			<Add library="shlwapi" />
 			<Add library="version" />
 		</Linker>

@@ -24,10 +24,10 @@ typedef struct
 	WORD bMinor;
 } JV_WIN_VER;
 
-BOOL JV_IsThisProcessNotepad();
+/// Get Host Windows' Version/Architecture Information
 BOOL JV_GetHostVer(JV_WIN_VER* winVer);
 DWORD JV_GetHostArch();
 DWORD JV_GetProcArch();
-BOOL JV_CompareWinVer(JV_WIN_VER* winVer, DWORD op, DWORD effective, WORD major, WORD minor, WORD bMajor, WORD bMinor);
+BOOL JV_CompareWinVer(const JV_WIN_VER* wv, const DWORD op, const DWORD effective, const WORD major, const WORD minor, const WORD bMajor, const WORD bMinor);
 
 #endif // HOST_H_INCLUDED

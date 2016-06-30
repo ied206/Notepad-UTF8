@@ -2,7 +2,6 @@
 #define __BasicInput_h
 
 void BinaryDump(const uint8_t buf[], const uint32_t bufsize);
-int WhatBitOS (int print);
 int BytePrefix (int sizelen);
 int CompileYear ();
 int CompileMonth ();

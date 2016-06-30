@@ -20,8 +20,9 @@ extern "C"
 {
 #endif
 
-BOOL DLL_EXPORT JV_HookStart();
-BOOL DLL_EXPORT JV_HookStop();
+/// Use SetWindowsHookEx Injection Method
+BOOL DLL_EXPORT JV_MessageHookStart();
+BOOL DLL_EXPORT JV_MessageHookStop();
 
 #ifdef __cplusplus
 }

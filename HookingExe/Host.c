@@ -5,32 +5,15 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <shlwapi.h>
+#ifdef _DEBUG
+#undef __CRT__NO_INLINE
+#endif
 #include <strsafe.h>
+#ifdef _DEBUG
+#define __CRT__NO_INLINE
+#endif
 
 #include "Host.h"
-
-BOOL JV_IsThisProcessNotepad()
-{
-    // %windir%\system32\notepad.exe
-    WCHAR procPath[MAX_PATH];
-    WCHAR cmpPath[MAX_PATH];
-    WCHAR winPath[MAX_BUF_LEN];
-    GetModuleFileName(NULL, procPath, MAX_PATH);
-    procPath[MAX_PATH-1] = '\0'; // For Win XP
-
-    GetEnvironmentVariableW(L"windir", winPath, MAX_BUF_LEN);
-    StringCbPrintfW(cmpPath, MAX_PATH, L"%s\\system32\\notepad.exe", winPath);
-    if (StrCmpIW(procPath, cmpPath) == 0)
-        return TRUE;
-    else
-    {
-        StringCbPrintfW(cmpPath, MAX_PATH, L"%s\\notepad.exe", winPath);
-        if (StrCmpIW(procPath, cmpPath) != 0)
-            return TRUE;
-    }
-
-    return FALSE;
-}
 
 BOOL JV_GetHostVer(JV_WIN_VER* winVer)
 {
@@ -95,7 +78,7 @@ DWORD JV_GetProcArch()
     return 0;
 }
 
-BOOL JV_CompareWinVer(JV_WIN_VER* wv, DWORD op, DWORD effective, WORD major, WORD minor, WORD bMajor, WORD bMinor)
+BOOL JV_CompareWinVer(const JV_WIN_VER* wv, const DWORD op, const DWORD effective, const WORD major, const WORD minor, const WORD bMajor, const WORD bMinor)
 {
     BOOL result = FALSE;
     uint64_t op_wv = 0;
