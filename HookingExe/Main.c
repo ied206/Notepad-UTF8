@@ -69,20 +69,15 @@ int main(int argc, char* argv[])
 	}
 	printf("dll path : %S\n", dllFullPath);
 
-	// Hook running notepad
-	// JV_InjectProcessByName(L"notepad.exe", dllFullPath);
+	if (arg.help)
+	{
+		JV_Help();
+		return 0;
+	}
 
 	switch (arg.method)
 	{
 	case JV_ARG_METHOD_API:
-		/*
-		// Set Global Notepad/CreateProcess Hook
-		JV_GlobalInject(dllFullPath);
-		printf("Hooking all processes...\nPress Enter to Exit...\n");
-		getchar();
-		printf("Stopped hooking all processes\n");
-		JV_GlobalEject(dllName);
-		*/
 		// Inject only to them - I do not want crash of taskmgr and Git Bash
 		JV_InjectByProcName(L"notepad.exe", dllFullPath);
 		JV_InjectByProcName(L"explorer.exe", dllFullPath);
@@ -147,7 +142,8 @@ bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
 
 void JV_Help()
 {
-    printf("NotepadUTF8 [-m api|msg] [-h]");
+    printf("NotepadUTF8 [-m api|msg] [-h]\n");
+    exit(0);
 }
 
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
@@ -156,8 +152,8 @@ WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 	JV_GetDllName(dllName, sizeof(dllName));
 
 	GetCurrentDirectoryW(bufSize, dllFullPath);
-	StringCchCatW(dllFullPath, bufSize, L"\\");
-	StringCchCatW(dllFullPath, bufSize, dllName);
+	StringCbCatW(dllFullPath, bufSize, L"\\");
+	StringCbCatW(dllFullPath, bufSize, dllName);
 
 	return dllFullPath;
 }
@@ -168,10 +164,10 @@ BOOL JV_GetDllName(WCHAR* dllName, const size_t bufSize)
 	switch (procArch)
 	{
 	case 32:
-		StringCchCopyW(dllName, bufSize, DLL_NAME_32);
+		StringCbCopyW(dllName, bufSize, DLL_NAME_32);
 		break;
 	case 64:
-		StringCchCopyW(dllName, bufSize, DLL_NAME_64);
+		StringCbCopyW(dllName, bufSize, DLL_NAME_64);
 		break;
 	default:
 		fprintf(stderr, "[ERR] Unknown Windows Architecture\n\n");

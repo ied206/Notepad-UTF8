@@ -8,13 +8,6 @@
 #include <shlwapi.h>
 #include <windows.h>
 #include <tlhelp32.h>
-#ifdef _DEBUG
-#undef __CRT__NO_INLINE
-#endif
-#include <strsafe.h>
-#ifdef _DEBUG
-#define __CRT__NO_INLINE
-#endif
 
 #include "Inject.h"
 #include "Host.h"
@@ -71,8 +64,8 @@ BOOL JV_InjectDllByPID(const DWORD dwPID, const WCHAR *szDllPath)
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, remoteProcBuf, 0, NULL);
 	}
 
-	// WaitForSingleObject(hThread, INFINITE);
-	// VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
+	WaitForSingleObject(hThread, INFINITE);
+	VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
 	if (!hThread)
 		return FALSE;
 
@@ -111,7 +104,7 @@ BOOL JV_EjectDllByPID(const DWORD dwPID, const void* baseAddr)
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, (void*) baseAddr, 0, NULL);
 	}
 
-	// WaitForSingleObject(hThread, INFINITE);
+	WaitForSingleObject(hThread, INFINITE);
 	if (!hThread)
 		return FALSE;
 
@@ -187,9 +180,9 @@ BOOL JV_InjectByProcName(const WCHAR* procName, const WCHAR* dllFullPath)
 		{
 			result = JV_InjectDllByPID(pe.th32ProcessID, dllFullPath);
 			if (result)
-				printf("[%5lu] %S Inject Success\n", pe.szExeFile, pe.th32ProcessID);
+				printf("[%5lu] %S Inject Success\n", pe.th32ProcessID, pe.szExeFile);
 			else
-				printf("[%5lu] %S Inject Failed\n", pe.szExeFile, pe.th32ProcessID);
+				printf("[%5lu] %S Inject Failed\n", pe.th32ProcessID, pe.szExeFile);
 		}
 	}
 	while (Process32NextW(hSnapShot, &pe));

@@ -14,6 +14,7 @@
 typedef struct
 {
     int method; // Hook method
+    int help; // help message
 } JV_ARG;
 
 #define JV_VER_MAJOR	1

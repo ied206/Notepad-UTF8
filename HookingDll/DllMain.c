@@ -16,12 +16,15 @@
 #include "DllMain.h"
 #include "MinHook.h"
 
+/// Generate Process Name strings
+void JV_GenProcNameStr();
 /// Create Thread for dll Attach/Detach
 DWORD WINAPI JV_DllProcessAttach(LPVOID lpParam);
 DWORD WINAPI JV_DllProcessDetach(LPVOID lpParam);
 /// Set Notepad's default encoding to UTF-8 (notepad.exe)
 BOOL JV_SetNotepadUTF8();
 BOOL JV_IsThisProcessNotepad();
+BOOL JV_IsThisProcessExplorer();
 BYTE* JV_GetBaseAddress(const DWORD dwPID);
 BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, const JV_WIN_VER* winVer, const DWORD hostArch);
 /// Hook CreateProcessA, CreateProcessW (Non-Notepad)
@@ -63,6 +66,19 @@ LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 HHOOK g_hProcHook = NULL;
 HINSTANCE g_hInstance = NULL;
 BOOL g_isNotepad = FALSE;
+BOOL g_isExplorer = FALSE;
+
+
+WCHAR g_currentProcPath[MAX_PATH];
+WCHAR g_windirPath[MAX_BUF_LEN];
+WCHAR g_notepadLongPathW[MAX_PATH];
+WCHAR g_notepadShortPathW[MAX_PATH];
+WCHAR g_explorerLongPathW[MAX_PATH];
+WCHAR g_explorerShortPathW[MAX_PATH];
+char g_notepadLongPathA[MAX_PATH];
+char g_notepadShortPathA[MAX_PATH];
+char g_explorerLongPathA[MAX_PATH];
+char g_explorerShortPathA[MAX_PATH];
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dn633971(v=vs.85).aspx
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682596(v=vs.85).aspx
@@ -75,14 +91,31 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason,
     {
         case DLL_PROCESS_ATTACH:
             g_hInstance = hInstDll;
+            JV_GenProcNameStr();
+            /*
             hThread = CreateThread(NULL, 0, JV_DllProcessAttach, NULL, 0, NULL);
             CloseHandle(hThread);
+            */
+            g_isNotepad = JV_IsThisProcessNotepad();
+            g_isExplorer = JV_IsThisProcessExplorer();
+            if (g_isNotepad) // Notepad
+            {
+                if (!JV_SetNotepadUTF8())
+                    return FALSE;
+            }
+            else if (g_isExplorer) // Explorernoetpad
+            {
+                if (!JV_HookCreateProcess())
+                    return FALSE;
+            }
+            else
+                return FALSE;
+
             break;
         case DLL_PROCESS_DETACH:
             // detach from process
-            hThread = CreateThread(NULL, 0, JV_DllProcessDetach, NULL, 0, NULL);
-            WaitForSingleObject(hThread, INFINITE);
-            CloseHandle(hThread);
+            if (g_isExplorer)
+                JV_UnHookCreateProcess();
             break;
         case DLL_THREAD_ATTACH:
             // attach to thread
@@ -91,23 +124,53 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason,
             // detach from thread
             break;
     }
+
     return TRUE; // succesful
+}
+
+/// Generate Process Name strings
+void JV_GenProcNameStr()
+{
+    // g_currentProcPath
+    GetModuleFileNameW(NULL, g_currentProcPath, sizeof(g_currentProcPath));
+    g_currentProcPath[MAX_PATH-1] = '\0'; // For Win XP
+    // g_windirPath
+    GetEnvironmentVariableW(L"windir", g_windirPath, sizeof(g_windirPath));
+    // g_notepadLongPathW
+    StringCbPrintfW(g_notepadLongPathW, sizeof(g_notepadLongPathW), L"%s\\system32\\notepad.exe", g_windirPath);
+    // g_notepadLongPathA
+    StringCbPrintfA(g_notepadLongPathA, sizeof(g_notepadLongPathA), "%S\\system32\\notepad.exe", g_windirPath);
+    // g_notepadShortPathW
+    StringCbPrintfW(g_notepadShortPathW, sizeof(g_notepadShortPathW), L"%s\\notepad.exe", g_windirPath);
+    // g_notepadShortPathA
+    StringCbPrintfA(g_notepadShortPathA, sizeof(g_notepadShortPathA), "%S\\notepad.exe", g_windirPath);
+    // g_explorerLongPathW
+    StringCbPrintfW(g_explorerLongPathW, sizeof(g_explorerLongPathW), L"%s\\system32\\explorer.exe", g_windirPath);
+    // g_explorerLongPathA
+    StringCbPrintfA(g_explorerLongPathA, sizeof(g_explorerLongPathA), "%S\\system32\\explorer.exe", g_windirPath);
+    // g_notepadShortPathW
+    StringCbPrintfW(g_explorerShortPathW, sizeof(g_explorerShortPathW), L"%s\\explorer.exe", g_windirPath);
+    // g_notepadShortPathA
+    StringCbPrintfA(g_explorerShortPathA, sizeof(g_explorerShortPathA), "%S\\explorer.exe", g_windirPath);
 }
 
 /// Create Thread for dll Attach/Detach
 DWORD WINAPI JV_DllProcessAttach(LPVOID lpParam)
 {
     g_isNotepad = JV_IsThisProcessNotepad();
-    if (g_isNotepad)
+    g_isExplorer = JV_IsThisProcessExplorer();
+    if (g_isNotepad) // Notepad
     {
         if (!JV_SetNotepadUTF8())
             return 1;
     }
-    else
+    else if (g_isExplorer) // Explorer
     {
         if (!JV_HookCreateProcess())
             return 1;
     }
+    else
+        return 1;
 
     // 0 means Succesful
     return 0;
@@ -115,7 +178,7 @@ DWORD WINAPI JV_DllProcessAttach(LPVOID lpParam)
 
 DWORD WINAPI JV_DllProcessDetach(LPVOID lpParam)
 {
-    if (g_isNotepad)
+    if (g_isExplorer)
         JV_UnHookCreateProcess();
 
     // 0 means Succesful
@@ -148,31 +211,32 @@ BOOL JV_SetNotepadUTF8()
     //  1 : Opened with UTF16_LE
     //  2 : Opened with UTF16_BE
     //  3 : Opened with UTF8
-    if (*_g_ftOpenAs == 0xFFFFFFFF) // default value - it's new file, not opened nor saved
+    if (*_g_ftOpenAs == 0xFFFFFFFF) // default value - it's new file, not opened
         *_g_ftOpenAs = 0x03;
 
     return TRUE;
 }
 
+
+
 BOOL JV_IsThisProcessNotepad()
 {
     // %windir%\system32\notepad.exe
-    WCHAR procPath[MAX_PATH];
-    WCHAR cmpPath[MAX_PATH];
-    WCHAR winPath[MAX_BUF_LEN];
-    GetModuleFileName(NULL, procPath, sizeof(procPath));
-    procPath[MAX_PATH-1] = '\0'; // For Win XP
-
-    GetEnvironmentVariableW(L"windir", winPath, sizeof(winPath));
-    StringCbPrintfW(cmpPath, sizeof(cmpPath), L"%s\\system32\\notepad.exe", winPath);
-    if (StrCmpIW(procPath, cmpPath) == 0)
+    if (StrCmpIW(g_currentProcPath, g_notepadLongPathW) == 0)
         return TRUE;
-    else
-    {
-        StringCbPrintfW(cmpPath, sizeof(cmpPath), L"%s\\notepad.exe", winPath);
-        if (StrCmpIW(procPath, cmpPath) == 0)
-            return TRUE;
-    }
+    else if (StrCmpIW(g_currentProcPath, g_notepadShortPathW) == 0)
+        return TRUE;
+
+    return FALSE;
+}
+
+BOOL JV_IsThisProcessExplorer()
+{
+    // %windir%\system32\explorer.exe
+    if (StrCmpIW(g_currentProcPath, g_explorerLongPathW) == 0)
+        return TRUE;
+    else if (StrCmpIW(g_currentProcPath, g_explorerShortPathW) == 0)
+        return TRUE;
 
     return FALSE;
 }
@@ -356,7 +420,7 @@ BOOL JV_UnHookCreateProcess()
     return TRUE;
 }
 
-BOOL JV_InjectDllByHandle(const HANDLE hProcess, const WCHAR *szDllPath)
+BOOL JV_InjectDllByHandle(const HANDLE hProcess, const WCHAR *dllFullPath)
 {
 	HANDLE hThread;
 	JV_WIN_VER winVer;
@@ -369,11 +433,11 @@ BOOL JV_InjectDllByHandle(const HANDLE hProcess, const WCHAR *szDllPath)
 		return FALSE;
 	JV_GetHostVer(&winVer);
 
-    dwBufSize = lstrlenW(szDllPath) * 2 + 1;
+    dwBufSize = lstrlenW(dllFullPath) * 2 + 1;
     remoteProcBuf = VirtualAllocEx(hProcess, NULL, dwBufSize, MEM_COMMIT, PAGE_READWRITE);
     if (!remoteProcBuf)
 		return FALSE;
-    WriteProcessMemory(hProcess, remoteProcBuf, (void*)szDllPath, dwBufSize, NULL);
+    WriteProcessMemory(hProcess, remoteProcBuf, (void*)dllFullPath, dwBufSize, NULL);
 	remoteThreadProc = (LPTHREAD_START_ROUTINE) GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
 
 	if (JV_CompareWinVer(&winVer, JV_CMP_GE, JV_CMP_L2, 6, 0, 0, 0))
@@ -386,8 +450,8 @@ BOOL JV_InjectDllByHandle(const HANDLE hProcess, const WCHAR *szDllPath)
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, remoteProcBuf, 0, NULL);
 	}
 
-	// WaitForSingleObject(hThread, INFINITE);
-	// VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
+	WaitForSingleObject(hThread, INFINITE);
+	VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
 	if (!hThread)
 		return FALSE;
 
@@ -533,17 +597,23 @@ BOOL WINAPI MyCreateProcessA(
 	LPPROCESS_INFORMATION lpProcessInformation)
 {
     BOOL result;
-    WCHAR modName[MAX_BUF_LEN];
     result = fpCreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
                             bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
                             lpStartupInfo, lpProcessInformation);
-    GetModuleFileNameW(g_hInstance, modName, sizeof(modName));
-    if (result)
+    if (result && (!StrCmpIA(lpApplicationName, g_notepadLongPathA) || !StrCmpIA(lpApplicationName, g_notepadShortPathA)))
+    {
+        WCHAR modName[MAX_BUF_LEN];
+        GetModuleFileNameW(g_hInstance, modName, sizeof(modName));
         JV_InjectDllByHandle(lpProcessInformation->hProcess, modName);
+    }
     return result;
-
 }
-
+/*
+explorer.exe
+lpApplicationName=C:\Windows\system32\NOTEPAD.EXE
+lpCommandLine="C:\Windows\system32\NOTEPAD.EXE" D:\Test.txt
+GetModuleFileNameEx(lpProcessAttributes->hProcess)=C:\Windows\System32\notepad.exe
+*/
 BOOL WINAPI MyCreateProcessW(
 	LPCWSTR                lpApplicationName,
 	LPWSTR                 lpCommandLine,
@@ -562,8 +632,13 @@ BOOL WINAPI MyCreateProcessW(
                             bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
                             lpStartupInfo, lpProcessInformation);
     GetModuleFileNameW(g_hInstance, modName, sizeof(modName));
-    if (result)
+
+    if (result && (!StrCmpIW(lpApplicationName, g_notepadLongPathW) || !StrCmpIW(lpApplicationName, g_notepadShortPathW)))
+    {
+        WCHAR modName[MAX_BUF_LEN];
+        GetModuleFileNameW(g_hInstance, modName, sizeof(modName));
         JV_InjectDllByHandle(lpProcessInformation->hProcess, modName);
+    }
     return result;
 }
 
