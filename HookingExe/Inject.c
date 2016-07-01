@@ -187,9 +187,9 @@ BOOL JV_InjectByProcName(const WCHAR* procName, const WCHAR* dllFullPath)
 		{
 			result = JV_InjectDllByPID(pe.th32ProcessID, dllFullPath);
 			if (result)
-				printf("[%5lu] Inject Success\n", pe.th32ProcessID);
+				printf("[%5lu] %S Inject Success\n", pe.szExeFile, pe.th32ProcessID);
 			else
-				printf("[%5lu] Inject Failed\n", pe.th32ProcessID);
+				printf("[%5lu] %S Inject Failed\n", pe.szExeFile, pe.th32ProcessID);
 		}
 	}
 	while (Process32NextW(hSnapShot, &pe));

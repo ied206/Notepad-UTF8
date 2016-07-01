@@ -16,6 +16,9 @@
 #include "DllMain.h"
 #include "MinHook.h"
 
+/// Create Thread for dll Attach/Detach
+DWORD WINAPI JV_DllProcessAttach(LPVOID lpParam);
+DWORD WINAPI JV_DllProcessDetach(LPVOID lpParam);
 /// Set Notepad's default encoding to UTF-8 (notepad.exe)
 BOOL JV_SetNotepadUTF8();
 BOOL JV_IsThisProcessNotepad();
@@ -59,43 +62,64 @@ BOOL WINAPI MyCreateProcessW(
 LRESULT CALLBACK JV_CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 HHOOK g_hProcHook = NULL;
 HINSTANCE g_hInstance = NULL;
-BOOL g_isNotepad = false;
+BOOL g_isNotepad = FALSE;
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/dn633971(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/ms682596(v=vs.85).aspx
 extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
+    HANDLE hThread = NULL;
     // return FALSE to fail DLL load in DLL_PROCESS_ATTACH
 
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
             g_hInstance = hInstDll;
-            g_isNotepad = JV_IsThisProcessNotepad();
-            if (g_isNotepad)
-            {
-                if (!JV_SetNotepadUTF8())
-                    return FALSE;
-            }
-            else
-            {
-                if (!JV_HookCreateProcess())
-                    return FALSE;
-            }
+            hThread = CreateThread(NULL, 0, JV_DllProcessAttach, NULL, 0, NULL);
+            CloseHandle(hThread);
             break;
         case DLL_PROCESS_DETACH:
             // detach from process
-            if (g_isNotepad)
-                JV_UnHookCreateProcess();
+            hThread = CreateThread(NULL, 0, JV_DllProcessDetach, NULL, 0, NULL);
+            WaitForSingleObject(hThread, INFINITE);
+            CloseHandle(hThread);
             break;
-
         case DLL_THREAD_ATTACH:
             // attach to thread
             break;
-
         case DLL_THREAD_DETACH:
             // detach from thread
             break;
     }
     return TRUE; // succesful
+}
+
+/// Create Thread for dll Attach/Detach
+DWORD WINAPI JV_DllProcessAttach(LPVOID lpParam)
+{
+    g_isNotepad = JV_IsThisProcessNotepad();
+    if (g_isNotepad)
+    {
+        if (!JV_SetNotepadUTF8())
+            return 1;
+    }
+    else
+    {
+        if (!JV_HookCreateProcess())
+            return 1;
+    }
+
+    // 0 means Succesful
+    return 0;
+}
+
+DWORD WINAPI JV_DllProcessDetach(LPVOID lpParam)
+{
+    if (g_isNotepad)
+        JV_UnHookCreateProcess();
+
+    // 0 means Succesful
+    return 0;
 }
 
 /// Set Notepad's default encoding to UTF-8 (notepad.exe)
@@ -362,8 +386,8 @@ BOOL JV_InjectDllByHandle(const HANDLE hProcess, const WCHAR *szDllPath)
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, remoteProcBuf, 0, NULL);
 	}
 
-	WaitForSingleObject(hThread, INFINITE);
-	VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
+	// WaitForSingleObject(hThread, INFINITE);
+	// VirtualFreeEx(hProcess, remoteProcBuf, 0, MEM_RELEASE);
 	if (!hThread)
 		return FALSE;
 

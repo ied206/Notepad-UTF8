@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include <shlwapi.h>
 #include <windows.h>
@@ -19,6 +20,8 @@
 #include "Host.h"
 #include "BasicIO.h"
 
+bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg);
+void JV_Help();
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize);
 BOOL JV_GetDllName(WCHAR* dllName, const size_t bufSize);
 
@@ -27,12 +30,31 @@ int main(int argc, char* argv[])
 	WCHAR dllFullPath[MAX_PATH];
 	WCHAR dllName[MAX_PATH];
 	DWORD procArch = JV_GetProcArch();
+	JV_ARG arg;
 
+	// Print program banner
+	printf(	"Joveler's NotepadUTF8 v%d.%d (Compile %4d.%02d.%02d)\n"
+			"- Set notepad's default encoding to UTF-8 instead of ANSI\n"
+			"- Source  (Web) : %s\n"
+			"- Release (Web) : %s\n\n",
+			JV_VER_MAJOR, JV_VER_MINOR,
+			CompileYear(), CompileMonth(), CompileDate(),
+			JV_WEB_SOURCE, JV_WEB_RELEASE);
+
+	// Parse argument
+	JV_ParseArg(argc, argv, &arg);
+
+	// Get dll name (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
 	JV_GetDllName(dllName, sizeof(dllName));
-	// Get Debug Privilege
-	JV_GetDebugPrivilege(); // If this return FALSE, it does not have admin privileges
 
-	// Get dll Path
+	// Try to Get Debug Privilege
+	// If this return FALSE, it does not have admin privileges
+	if (JV_GetDebugPrivilege())
+        puts("Running with administrator privileges\n");
+	else
+		puts("Running without administrator privileges\n");
+
+	// Get dll full path
 	JV_GetDllFullPath(dllFullPath, sizeof(dllFullPath));
 
 	// Check DLL's existance
@@ -48,19 +70,84 @@ int main(int argc, char* argv[])
 	printf("dll path : %S\n", dllFullPath);
 
 	// Hook running notepad
-	// JV_InjectProcess(L"notepad.exe", dllFullPath);
+	// JV_InjectProcessByName(L"notepad.exe", dllFullPath);
 
-	// Set Global Message Hook
-	//JV_SetMessageHook(dllFullPath);
-
-	// Set Global Notepad/CreateProcess Hook
-	JV_GlobalInject(dllFullPath);
-	printf("Hooking all processes...\nPress Enter to Exit...\n");
-	getchar();
-	printf("Stopped hooking all processes\n");
-	JV_GlobalEject(dllName);
+	switch (arg.method)
+	{
+	case JV_ARG_METHOD_API:
+		/*
+		// Set Global Notepad/CreateProcess Hook
+		JV_GlobalInject(dllFullPath);
+		printf("Hooking all processes...\nPress Enter to Exit...\n");
+		getchar();
+		printf("Stopped hooking all processes\n");
+		JV_GlobalEject(dllName);
+		*/
+		// Inject only to them - I do not want crash of taskmgr and Git Bash
+		JV_InjectByProcName(L"notepad.exe", dllFullPath);
+		JV_InjectByProcName(L"explorer.exe", dllFullPath);
+		// D:\Jang\Build\Source\C\NotepadUTF8\res
+		system("pause");
+		JV_EjectByProcName(L"notepad.exe", dllName);
+		JV_EjectByProcName(L"explorer.exe", dllName);
+		break;
+	case JV_ARG_METHOD_MSG:
+		// Set Global Message Hook
+		JV_SetMessageHook(dllFullPath);
+		break;
+	}
 
 	return 0;
+}
+
+// -m api
+// -m msg
+bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
+{
+	bool flag_err = false;
+
+	memset(arg, 0, sizeof(JV_ARG));
+	// set to default value
+	arg->method = JV_ARG_METHOD_API;
+
+	if (2 <= argc)
+	{
+		for (int i = 1; i < argc; i++)
+		{
+			flag_err = FALSE;
+            if (stricmp(argv[i], "-m") == 0 || stricmp(argv[i], "/m") == 0)
+			{
+				if (!(i+1 < argc))
+					flag_err = true;
+				else
+				{
+                    if (stricmp(argv[i+1], "api") == 0)
+						arg->method = JV_ARG_METHOD_API;
+					else if (stricmp(argv[i+1], "msg") == 0)
+						arg->method = JV_ARG_METHOD_MSG;
+					else
+						flag_err = true;
+				}
+			}
+
+			if (stricmp(argv[i], "-h") == 0 || stricmp(argv[i], "/?") == 0)
+				JV_Help();
+		}
+
+		if (flag_err)
+		{
+			fprintf(stderr, "[ERR] Invalid argument\n\n");
+			exit(1);
+		}
+	}
+
+	// return Zero when success
+	return flag_err;
+}
+
+void JV_Help()
+{
+    printf("NotepadUTF8 [-m api|msg] [-h]");
 }
 
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
