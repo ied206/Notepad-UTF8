@@ -341,13 +341,14 @@ BOOL JV_GlobalEject(const WCHAR* dllName)
 
 /// Use SetWindowsHookEx Injection Method
 /// TODO : System becomes too slow or unstable
-BOOL JV_SetMessageHook(const WCHAR* dllFullPath)
+BOOL JV_SetMessageHook(const WCHAR* dllName)
 {
 	HMODULE hDll = INVALID_HANDLE_VALUE;
 	fp_MessageHookStart_t JV_MessageHookStart = NULL;
 	fp_MessageHookStop_t JV_MessageHookStop = NULL;
 
-	hDll = LoadLibraryExW(dllFullPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+	// hDll = LoadLibraryExW(dllFullPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+	hDll = LoadLibraryW(dllName);
 	if (!hDll)
 	{
 		fprintf(stderr, "[ERR] LoadLibraryEx() failed\nError Code : %lu\n\n", GetLastError());

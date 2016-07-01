@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 		break;
 	case JV_ARG_METHOD_MSG:
 		// Set Global Message Hook
-		JV_SetMessageHook(dllFullPath);
+		// JV_SetMessageHook(dllFullPath);
+		JV_SetMessageHook(dllName);
 		break;
 	}
 

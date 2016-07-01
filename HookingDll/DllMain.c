@@ -1,6 +1,7 @@
 #include "Var.h"
 
 #include <stdint.h>
+#include <time.h>
 
 #include <windows.h>
 #include <tlhelp32.h>
@@ -84,7 +85,6 @@ char g_explorerShortPathA[MAX_PATH];
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682596(v=vs.85).aspx
 extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
-    HANDLE hThread = NULL;
     // return FALSE to fail DLL load in DLL_PROCESS_ATTACH
 
     switch (fdwReason)
@@ -92,10 +92,7 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason,
         case DLL_PROCESS_ATTACH:
             g_hInstance = hInstDll;
             JV_GenProcNameStr();
-            /*
-            hThread = CreateThread(NULL, 0, JV_DllProcessAttach, NULL, 0, NULL);
-            CloseHandle(hThread);
-            */
+
             g_isNotepad = JV_IsThisProcessNotepad();
             g_isExplorer = JV_IsThisProcessExplorer();
             if (g_isNotepad) // Notepad
@@ -109,8 +106,9 @@ extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason,
                     return FALSE;
             }
             else
+            {
                 return FALSE;
-
+            }
             break;
         case DLL_PROCESS_DETACH:
             // detach from process
@@ -600,6 +598,7 @@ BOOL WINAPI MyCreateProcessA(
     result = fpCreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
                             bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
                             lpStartupInfo, lpProcessInformation);
+
     if (result && (!StrCmpIA(lpApplicationName, g_notepadLongPathA) || !StrCmpIA(lpApplicationName, g_notepadShortPathA)))
     {
         WCHAR modName[MAX_BUF_LEN];
@@ -608,6 +607,16 @@ BOOL WINAPI MyCreateProcessA(
     }
     return result;
 }
+/*
+char buf[MAX_PATH];
+FILE* fp = NULL;
+srand(time(NULL));
+StringCbPrintfA(buf, sizeof(buf), "D:\\Test\\%d.txt", rand());
+fp = fopen(buf, "rt");
+fprintf(fp, "lpApplicationName : %S", lpApplicationName);
+fclose(fp);
+*/
+
 /*
 explorer.exe
 lpApplicationName=C:\Windows\system32\NOTEPAD.EXE
@@ -627,11 +636,9 @@ BOOL WINAPI MyCreateProcessW(
 	LPPROCESS_INFORMATION lpProcessInformation)
 {
     BOOL result;
-    WCHAR modName[MAX_BUF_LEN];
     result = fpCreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes,
                             bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory,
                             lpStartupInfo, lpProcessInformation);
-    GetModuleFileNameW(g_hInstance, modName, sizeof(modName));
 
     if (result && (!StrCmpIW(lpApplicationName, g_notepadLongPathW) || !StrCmpIW(lpApplicationName, g_notepadShortPathW)))
     {
