@@ -7,6 +7,9 @@
 #define JV_DEBUG_PRIV_FAILURE	1
 #define JV_DEBUG_PRIV_NO_ADMIN	2
 
+/// Turn on/off dll injection
+void JV_TurnOn(WCHAR* dllFullPath);
+void JV_TurnOff(WCHAR* dllName);
 /// Inject/Eject to one process - by PID
 BOOL JV_InjectDllByPID(const DWORD dwPID, const WCHAR *szDllPath);
 BOOL JV_EjectDllByPID(const DWORD dwPID, const void* baseAddr);

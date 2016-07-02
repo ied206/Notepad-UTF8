@@ -13,7 +13,7 @@ EXE_RESINC =
 EXE_RCFLAGS = 
 EXE_LIBDIR = 
 EXE_SRCDIR = HookEXE
-EXE_LIB = -lversion -lshlwapi
+EXE_LIB = -lversion -lshlwapi -lcomdlg32 -lgdi32
 EXE_LDFLAGS = 
 
 EXE_INC_32 = $(EXE_INC)
@@ -40,8 +40,8 @@ EXE_OBJDIR_64 = .\\obj\\x64
 EXE_DEP_64 = 
 EXE_OUT_64 = .\\bin\\NotepadUTF8_x64.exe
 
-EXE_OBJ_32 = $(EXE_OBJDIR_32)\\BasicIO.o $(EXE_OBJDIR_32)\\Host.o $(EXE_OBJDIR_32)\\Inject.o $(EXE_OBJDIR_32)\\Main.o $(EXE_OBJDIR_32)\\rc\\HookRes.o
-EXE_OBJ_64 = $(EXE_OBJDIR_64)\\BasicIO.o $(EXE_OBJDIR_64)\\Host.o $(EXE_OBJDIR_64)\\Inject.o $(EXE_OBJDIR_64)\\Main.o $(EXE_OBJDIR_64)\\rc\\HookRes.o
+EXE_OBJ_32 = $(EXE_OBJDIR_32)\\BasicIO.o $(EXE_OBJDIR_32)\\Host.o $(EXE_OBJDIR_32)\\Inject.o $(EXE_OBJDIR_32)\\UI.o $(EXE_OBJDIR_32)\\Main.o $(EXE_OBJDIR_32)\\rc\\HookRes.o
+EXE_OBJ_64 = $(EXE_OBJDIR_64)\\BasicIO.o $(EXE_OBJDIR_64)\\Host.o $(EXE_OBJDIR_64)\\Inject.o $(EXE_OBJDIR_64)\\UI.o $(EXE_OBJDIR_64)\\Main.o $(EXE_OBJDIR_64)\\rc\\HookRes.o
 
 
 all: exe_release_32 exe_release_64 dll_release_32 dll_release_64
@@ -70,6 +70,9 @@ $(EXE_OBJDIR_32)\\Host.o: $(EXE_SRCDIR)\\Host.c
 $(EXE_OBJDIR_32)\\Inject.o: $(EXE_SRCDIR)\\Inject.c
 	$(CC) $(EXE_CFLAGS_32) $(EXE_INC_32) -c $(EXE_SRCDIR_32)\\Inject.c -o $(EXE_OBJDIR_32)\\Inject.o
 
+$(EXE_OBJDIR_32)\\UI.o: $(EXE_SRCDIR)\\UI.c
+	$(CC) $(EXE_CFLAGS_32) $(EXE_INC_32) -c $(EXE_SRCDIR_32)\\UI.c -o $(EXE_OBJDIR_32)\\UI.o
+	
 $(EXE_OBJDIR_32)\\Main.o: $(EXE_SRCDIR)\\Main.c
 	$(CC) $(EXE_CFLAGS_32) $(EXE_INC_32) -c $(EXE_SRCDIR_32)\\Main.c -o $(EXE_OBJDIR_32)\\Main.o
 	
@@ -91,6 +94,9 @@ $(EXE_OBJDIR_64)\\Host.o: $(EXE_SRCDIR)\\Host.c
 $(EXE_OBJDIR_64)\\Inject.o: $(EXE_SRCDIR)\\Inject.c
 	$(CC) $(EXE_CFLAGS_64) $(EXE_INC_64) -c $(EXE_SRCDIR_64)\\Inject.c -o $(EXE_OBJDIR_64)\\Inject.o
 
+$(EXE_OBJDIR_64)\\UI.o: $(EXE_SRCDIR)\\UI.c
+	$(CC) $(EXE_CFLAGS_64) $(EXE_INC_64) -c $(EXE_SRCDIR_64)\\UI.c -o $(EXE_OBJDIR_64)\\UI.o
+	
 $(EXE_OBJDIR_64)\\Main.o: $(EXE_SRCDIR)\\Main.c
 	$(CC) $(EXE_CFLAGS_64) $(EXE_INC_64) -c $(EXE_SRCDIR_64)\\Main.c -o $(EXE_OBJDIR_64)\\Main.o
 

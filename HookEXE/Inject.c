@@ -28,6 +28,28 @@ typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
 typedef BOOL (*fp_MessageHookStart_t)();
 typedef BOOL (*fp_MessageHookStop_t)();
 
+extern int g_state;
+
+/// Turn on/off dll injection
+void JV_TurnOn(WCHAR* dllFullPath)
+{
+	if (g_state == JV_STATE_TURN_OFF)
+	{
+		g_state = JV_STATE_TURN_ON;
+		JV_InjectByProcName(L"notepad.exe", dllFullPath);
+		JV_InjectByProcName(L"explorer.exe", dllFullPath);
+	}
+}
+
+void JV_TurnOff(WCHAR* dllName)
+{
+	if (g_state == JV_STATE_TURN_ON)
+	{
+		g_state = JV_STATE_TURN_OFF;
+		JV_EjectByProcName(L"notepad.exe", dllName);
+		JV_EjectByProcName(L"explorer.exe", dllName);
+	}
+}
 
 /// Inject/Eject to one process - by PID
 BOOL JV_InjectDllByPID(const DWORD dwPID, const WCHAR *szDllPath)

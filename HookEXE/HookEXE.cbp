@@ -58,6 +58,8 @@
 		<Linker>
 			<Add library="version" />
 			<Add library="shlwapi" />
+			<Add library="comdlg32" />
+			<Add library="gdi32" />
 		</Linker>
 		<Unit filename="BasicIO.c">
 			<Option compilerVar="CC" />
@@ -74,6 +76,10 @@
 		<Unit filename="Main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="UI.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="UI.h" />
 		<Unit filename="Var.h" />
 		<Unit filename="rc/HookRes.rc">
 			<Option compilerVar="WINDRES" />

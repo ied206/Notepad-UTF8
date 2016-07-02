@@ -18,14 +18,178 @@
 
 #include "Inject.h"
 #include "Host.h"
+#include "UI.h"
 #include "BasicIO.h"
 
-bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg);
-void JV_Help();
+
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize);
 BOOL JV_GetDllName(WCHAR* dllName, const size_t bufSize);
+LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-int main(int argc, char* argv[])
+HINSTANCE g_hInst;
+HWND g_hWnd;
+int g_state = JV_STATE_TURN_ON;
+WCHAR g_dllFullPath[MAX_PATH];
+WCHAR g_dllName[MAX_PATH];
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	HWND hWnd;
+	MSG	Msg;
+
+	DWORD procArch = JV_GetProcArch();
+	DWORD hostArch = JV_GetHostArch();
+
+	// Init g_hInst
+	g_hInst = hInstance;
+
+	// Find if BatteryLine is already running.
+	hWnd = FindWindowW(JV_CLASS_NAME, 0);
+	if (hWnd != NULL) // Running BatteryLine found? Terminate it.
+	{
+		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_OFF, NIF_INFO, 0, L"Notepad-UTF8 Off");
+		JVUI_DelTrayIcon(hWnd, JV_SYSTRAY_ID_OFF);
+		SendMessageW(hWnd, WM_CLOSE, 0, 0);
+		return 0;
+	}
+
+	// Get dll name and full path (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
+	JV_GetDllName(g_dllName, sizeof(g_dllName));
+	JV_GetDllFullPath(g_dllFullPath, sizeof(g_dllFullPath));
+	// Check DLL's existance
+    if (!PathFileExistsW(g_dllFullPath))
+	{
+		fprintf(stderr, "[ERR] Unable to find ");
+		if (hostArch == 32)
+			fprintf(stderr, "%S\n\n", DLL_NAME_32);
+		else if (hostArch == 64)
+			fprintf(stderr, "%S\n\n", DLL_NAME_64);
+		exit(1);
+	}
+	printf("dll path : %S\n", g_dllFullPath);
+
+	// Init Window
+	g_hWnd = hWnd = JVUI_InitWindow(hInstance);
+
+	// Check bitness
+	if (hostArch != procArch)
+	{
+		WCHAR msgbox[JV_BUF_SIZE];
+		StringCchPrintfW(msgbox, JV_BUF_SIZE, L"You must use %lubit Notepad-UTF8 for %lubit Windows\n\n", hostArch, hostArch);
+        MessageBoxW(hWnd, msgbox, L"Error", MB_OK | MB_ICONERROR);
+        exit(1);
+	}
+
+
+	// Do Dll Injection
+	JV_TurnOn(g_dllFullPath);
+
+	// Decode and treat the messages as long as the application is running
+	while (GetMessage(&Msg, NULL, 0, 0))
+	{
+		TranslateMessage(&Msg);
+		DispatchMessage(&Msg);
+	}
+
+	// Destroy Window
+	JVUI_WM_CLOSE(hWnd, FALSE);
+
+	return Msg.wParam;
+}
+
+LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	WCHAR msgbox[JV_BUF_SIZE];
+
+    switch (Msg)
+    {
+	case WM_CREATE:
+		#ifdef _DEBUG_CONSOLE
+		puts("WM_CREATE");
+		#endif // _DEBUG_CONSOLE
+		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_ON, NIF_MESSAGE | NIF_TIP | NIF_INFO, WM_APP_SYSTRAY_POPUP, L"Notepad-UTF8 On");
+		break;
+	case WM_APP_SYSTRAY_POPUP: // systray msg callback
+		#ifdef _DEBUG_CONSOLE
+		puts("WM_APP_SYSTRAY_POPUP");
+		#endif
+        switch (lParam)
+        {
+		case WM_LBUTTONDBLCLK:
+			#ifdef _DEBUG_CONSOLE
+			puts("  WM_LBUTTONDBLCLK");
+			#endif // _DEBUG_CONSOLE
+			SendMessage(hWnd, WM_COMMAND, ID_ABOUT, 0);
+			break;
+		case WM_RBUTTONUP:
+			#ifdef _DEBUG_CONSOLE
+			puts("  WM_RBUTTONUP");
+			#endif // _DEBUG_CONSOLE
+			SetForegroundWindow(hWnd);
+			JVUI_ShowPopupMenu(hWnd, NULL, -1);
+			PostMessage(hWnd, WM_APP_SYSTRAY_POPUP, 0, 0);
+			break;
+        }
+        break;
+	case WM_COMMAND: // systray msg callback
+		#ifdef _DEBUG_CONSOLE
+		puts("WM_COMMAND");
+		#endif // _DEBUG_CONSOLE
+        switch (LOWORD(wParam))
+        {
+            case ID_ABOUT:
+				#ifdef _DEBUG_CONSOLE
+				puts("  ID_ABOUT");
+				#endif // _DEBUG_CONSOLE
+				// Print program banner
+				StringCchPrintfW(msgbox, JV_BUF_SIZE,
+						L"Joveler's Notepad-UTF8 %d.%d (%dbit)\n"
+						L"[Binary] %s\n"
+						L"[Source] %s\n\n"
+						L"Compile Date : %04d.%02d.%02d\n",
+						JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
+						JV_WEB_RELEASE, JV_WEB_SOURCE,
+						CompileYear(), CompileMonth(), CompileDate());
+				MessageBoxW(hWnd, msgbox, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+				break;
+			case ID_TOGGLE:
+                switch (g_state)
+                {
+				case JV_STATE_TURN_ON:
+					JV_TurnOff(g_dllName);
+					break;
+				case JV_STATE_TURN_OFF:
+					JV_TurnOn(g_dllFullPath);
+					break;
+                }
+				break;
+			case ID_EXIT:
+				#ifdef _DEBUG_CONSOLE
+				puts("  ID_EXIT");
+				#endif // _DEBUG_CONSOLE
+				PostMessage(hWnd, WM_CLOSE, 0, 0);
+				break;
+        }
+        break;
+	case WM_CLOSE: // 0x0010
+		#ifdef _DEBUG_CONSOLE
+		if (Msg == WM_CLOSE)
+			puts("WM_CLOSE");
+		else if (Msg == WM_DESTROY)
+			puts("WM_DESTROY");
+		#endif // _DEBUG_CONSOLE
+		JVUI_WM_CLOSE(hWnd, TRUE);
+        break;
+	default:
+		return DefWindowProc(hWnd, Msg, wParam, lParam);
+		break;
+    }
+
+    return 0;
+}
+
+/*
+int main_bak(int argc, char* argv[])
 {
 	WCHAR dllFullPath[MAX_PATH];
 	WCHAR dllName[MAX_PATH];
@@ -60,22 +224,6 @@ int main(int argc, char* argv[])
 	// Get dll name (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
 	JV_GetDllName(dllName, sizeof(dllName));
 
-	// Try to Get Debug Privilege
-	/*
-	switch (JV_GetDebugPrivilege())
-	{
-	case JV_DEBUG_PRIV_SUCCESS:
-		puts("Running with administrator privilege\n");
-		break;
-	case JV_DEBUG_PRIV_FAILURE:
-		puts("Unable to obtain debug privilege\n");
-		break;
-	case JV_DEBUG_PRIV_NO_ADMIN:
-		puts("Running without administrator privilege\n");
-		break;
-	}
-	*/
-
 	// Get dll full path
 	JV_GetDllFullPath(dllFullPath, sizeof(dllFullPath));
 
@@ -101,60 +249,7 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
-
-// -m api
-// -m msg
-bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
-{
-	bool flag_err = false;
-
-	memset(arg, 0, sizeof(JV_ARG));
-	// set to default value
-	arg->method = JV_ARG_METHOD_API;
-	arg->help = JV_ARG_HELP_OFF;
-
-	if (2 <= argc)
-	{
-		for (int i = 1; i < argc; i++)
-		{
-			flag_err = FALSE;
-            if (stricmp(argv[i], "-m") == 0 || stricmp(argv[i], "/m") == 0)
-			{
-				if (!(i+1 < argc))
-					flag_err = true;
-				else
-				{
-                    if (stricmp(argv[i+1], "api") == 0)
-						arg->method = JV_ARG_METHOD_API;
-					else if (stricmp(argv[i+1], "msg") == 0)
-						arg->method = JV_ARG_METHOD_MSG;
-					else
-						flag_err = true;
-				}
-			}
-
-			if (stricmp(argv[i], "-h") == 0 || stricmp(argv[i], "/?") == 0)
-				arg->help = JV_ARG_HELP_ON;
-		}
-
-		if (flag_err)
-		{
-			fprintf(stderr, "[ERR] Invalid argument\n\n");
-			exit(1);
-		}
-	}
-
-	// return Zero when success
-	return flag_err;
-}
-
-void JV_Help()
-{
-    printf(	"NotepadUTF8 [-m api | msg] [-h]\n"
-			"  -m    choose method\n"
-			"  -h    print this help message\n");
-    exit(0);
-}
+*/
 
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 {
