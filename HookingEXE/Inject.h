@@ -3,6 +3,10 @@
 
 #include <windows.h>
 
+#define JV_DEBUG_PRIV_SUCCESS	0
+#define JV_DEBUG_PRIV_FAILURE	1
+#define JV_DEBUG_PRIV_NO_ADMIN	2
+
 /// Inject/Eject to one process - by PID
 BOOL JV_InjectDllByPID(const DWORD dwPID, const WCHAR *szDllPath);
 BOOL JV_EjectDllByPID(const DWORD dwPID, const void* baseAddr);
@@ -17,7 +21,7 @@ BOOL JV_GlobalEject(const WCHAR* dllName);
 /// Use SetWindowsHookEx Injection Method
 BOOL JV_SetMessageHook(const WCHAR* dllFullPath);
 /// Get Debug Privilege - needs admin privilege
-BOOL JV_GetDebugPrivilege();
+DWORD JV_GetDebugPrivilege();
 
 
 #endif // INJECT_H_INCLUDED

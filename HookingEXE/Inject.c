@@ -341,14 +341,13 @@ BOOL JV_GlobalEject(const WCHAR* dllName)
 
 /// Use SetWindowsHookEx Injection Method
 /// TODO : System becomes too slow or unstable
-BOOL JV_SetMessageHook(const WCHAR* dllName)
+BOOL JV_SetMessageHook(const WCHAR* dllFullPath)
 {
 	HMODULE hDll = INVALID_HANDLE_VALUE;
 	fp_MessageHookStart_t JV_MessageHookStart = NULL;
 	fp_MessageHookStop_t JV_MessageHookStop = NULL;
 
-	// hDll = LoadLibraryExW(dllFullPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-	hDll = LoadLibraryW(dllName);
+	hDll = LoadLibraryExW(dllFullPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 	if (!hDll)
 	{
 		fprintf(stderr, "[ERR] LoadLibraryEx() failed\nError Code : %lu\n\n", GetLastError());
@@ -376,7 +375,7 @@ BOOL JV_SetMessageHook(const WCHAR* dllName)
 
 
 /// Get Debug Privilege - needs admin privilege
-BOOL JV_GetDebugPrivilege()
+DWORD JV_GetDebugPrivilege()
 {
     HANDLE hProcess = GetCurrentProcess();
     HANDLE hToken;
@@ -386,13 +385,13 @@ BOOL JV_GetDebugPrivilege()
     if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
     {
         fprintf(stderr, "[ERR] OpenProcessToken() failed\nError Code : %lu\n\n", GetLastError());
-        return FALSE;
+        return JV_DEBUG_PRIV_FAILURE;
     }
 
     if (!LookupPrivilegeValueW(NULL, L"SeDebugPrivilege", &luid))
     {
         fprintf(stderr, "[ERR] LookupPrivilegeValue() failed\nError Code : %lu\n\n", GetLastError());
-        return FALSE;
+        return JV_DEBUG_PRIV_FAILURE;
     }
 
     pToken.PrivilegeCount = 1;
@@ -402,15 +401,15 @@ BOOL JV_GetDebugPrivilege()
     if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, 0, (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
     {
         fprintf(stderr, "[ERR] AdjustTokenPrivileges() failed\nError Code : %lu\n\n", GetLastError());
-        return FALSE;
+        return JV_DEBUG_PRIV_FAILURE;
     }
 
     if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
     {
-        fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\nTry running this program with Administrator Privilege.\n\n");
-        return FALSE;
+        // fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\nTry running this program with Administrator Privilege.\n\n");
+        return JV_DEBUG_PRIV_NO_ADMIN;
     }
     CloseHandle(hToken);
 
-    return TRUE;
+    return JV_DEBUG_PRIV_SUCCESS;
 }

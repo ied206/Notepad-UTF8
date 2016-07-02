@@ -11,6 +11,9 @@
 // -h msg
 #define JV_ARG_METHOD_API	1
 #define JV_ARG_METHOD_MSG	2
+#define JV_ARG_HELP_OFF		0
+#define JV_ARG_HELP_ON		1
+
 typedef struct
 {
     int method; // Hook method

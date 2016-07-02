@@ -43,16 +43,28 @@ int main(int argc, char* argv[])
 
 	// Parse argument
 	JV_ParseArg(argc, argv, &arg);
+	if (arg.help)
+	{
+		JV_Help();
+		return 0;
+	}
 
 	// Get dll name (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
 	JV_GetDllName(dllName, sizeof(dllName));
 
 	// Try to Get Debug Privilege
-	// If this return FALSE, it does not have admin privileges
-	if (JV_GetDebugPrivilege())
-        puts("Running with administrator privileges\n");
-	else
-		puts("Running without administrator privileges\n");
+	switch (JV_GetDebugPrivilege())
+	{
+	case JV_DEBUG_PRIV_SUCCESS:
+		puts("Running with administrator privilege\n");
+		break;
+	case JV_DEBUG_PRIV_FAILURE:
+		puts("Unable to obtain debug privilege\n");
+		break;
+	case JV_DEBUG_PRIV_NO_ADMIN:
+		puts("Running without administrator privilege\n");
+		break;
+	}
 
 	// Get dll full path
 	JV_GetDllFullPath(dllFullPath, sizeof(dllFullPath));
@@ -69,11 +81,7 @@ int main(int argc, char* argv[])
 	}
 	printf("dll path : %S\n", dllFullPath);
 
-	if (arg.help)
-	{
-		JV_Help();
-		return 0;
-	}
+
 
 	switch (arg.method)
 	{
@@ -88,8 +96,7 @@ int main(int argc, char* argv[])
 		break;
 	case JV_ARG_METHOD_MSG:
 		// Set Global Message Hook
-		// JV_SetMessageHook(dllFullPath);
-		JV_SetMessageHook(dllName);
+		JV_SetMessageHook(dllFullPath);
 		break;
 	}
 
@@ -105,6 +112,7 @@ bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
 	memset(arg, 0, sizeof(JV_ARG));
 	// set to default value
 	arg->method = JV_ARG_METHOD_API;
+	arg->help = JV_ARG_HELP_OFF;
 
 	if (2 <= argc)
 	{
@@ -127,7 +135,7 @@ bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
 			}
 
 			if (stricmp(argv[i], "-h") == 0 || stricmp(argv[i], "/?") == 0)
-				JV_Help();
+				arg->help = JV_ARG_HELP_ON;
 		}
 
 		if (flag_err)
@@ -143,7 +151,9 @@ bool JV_ParseArg(int argc, char* argv[], JV_ARG* arg)
 
 void JV_Help()
 {
-    printf("NotepadUTF8 [-m api|msg] [-h]\n");
+    printf(	"NotepadUTF8 [-m api | msg] [-h]\n"
+			"  -m    choose method\n"
+			"  -h    print this help message\n");
     exit(0);
 }
 

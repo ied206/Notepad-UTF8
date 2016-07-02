@@ -110,23 +110,23 @@ BOOL JV_CompareWinVer(const JV_WIN_VER* wv, const DWORD op, const DWORD effectiv
     switch (op)
     {
     case JV_CMP_L:
-        if (op_cmp < op_wv)
+        if (op_wv < op_cmp)
             result = TRUE;
         break;
     case JV_CMP_LE:
-        if (op_cmp <= op_wv)
+        if (op_wv <= op_cmp)
             result = TRUE;
         break;
     case JV_CMP_E:
-        if (op_cmp == op_wv)
+        if (op_wv == op_cmp)
             result = TRUE;
         break;
     case JV_CMP_GE:
-        if (op_cmp >= op_wv)
+        if (op_wv >= op_cmp)
             result = TRUE;
         break;
     case JV_CMP_G:
-        if (op_cmp > op_wv)
+        if (op_wv > op_cmp)
             result = TRUE;
         break;
     }

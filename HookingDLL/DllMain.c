@@ -83,7 +83,7 @@ char g_explorerShortPathA[MAX_PATH];
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dn633971(v=vs.85).aspx
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms682596(v=vs.85).aspx
-extern "C" DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
+extern DLL_EXPORT BOOL APIENTRY DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
     // return FALSE to fail DLL load in DLL_PROCESS_ATTACH
 
@@ -296,10 +296,10 @@ BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, const JV_WIN_VER* winVer, const DW
         // _g_ftSaveAS = Base + 0xC000
         else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 0, 6001, 18000))
             return baseAddr + 0xA00C;
-        // 7 x86 SP1 (Tested)
+        // 7 x86 (6.1.7600.16385, 6.1.7601.18917) (Tested)
         // _g_ftOpenAS = Base + 0xC00C
         // _g_ftSaveAS = Base + 0xE040
-        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 1, 7600, 16385))
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L2, 6, 1, 7600, 16385))
             return baseAddr + 0xC00C;
         // 8 x86 SP2
         // _g_ftOpenAS = Base + 0x1D008
@@ -316,7 +316,7 @@ BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, const JV_WIN_VER* winVer, const DW
         // _g_ftSaveAS = Base + 0x19260
         else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10240, 16384))
             return baseAddr + 0x17108;
-        // 10 x86 (10.0.10586, 10.0.10240)
+        // 10.0.10586 x86
         // _g_ftOpenAS = Base + 0x1C138
         // _g_ftSaveAS = Base + 0x1E400
         else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 10, 0, 10586, 0))
@@ -329,10 +329,10 @@ BYTE* JV_GetNotepadOpenAsAddr(BYTE* baseAddr, const JV_WIN_VER* winVer, const DW
         // _g_ftSaveAS = Base + 0x120B0
         if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 0, 6001, 18000))
             return baseAddr + 0x10558;
-        // 7 x64 SP1
+        // 7 x64 (6.1.7600.16385, 6.1.7601.18917)
         // _g_ftOpenAS = Base + 0x10088
         // _g_ftSaveAS = Base + 0x12720
-        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L3, 6, 1, 7600, 16385))
+        else if (JV_CompareWinVer(winVer, JV_CMP_E, JV_CMP_L2, 6, 1, 7600, 16385))
             return baseAddr + 0x10088;
         // 8 x64
         // _g_ftOpenAS = Base + 0x1F00C
@@ -556,23 +556,23 @@ BOOL JV_CompareWinVer(const JV_WIN_VER* wv, const DWORD op, const DWORD effectiv
     switch (op)
     {
     case JV_CMP_L:
-        if (op_cmp < op_wv)
+        if (op_wv < op_cmp)
             result = TRUE;
         break;
     case JV_CMP_LE:
-        if (op_cmp <= op_wv)
+        if (op_wv <= op_cmp)
             result = TRUE;
         break;
     case JV_CMP_E:
-        if (op_cmp == op_wv)
+        if (op_wv == op_cmp)
             result = TRUE;
         break;
     case JV_CMP_GE:
-        if (op_cmp >= op_wv)
+        if (op_wv >= op_cmp)
             result = TRUE;
         break;
     case JV_CMP_G:
-        if (op_cmp > op_wv)
+        if (op_wv > op_cmp)
             result = TRUE;
         break;
     }
