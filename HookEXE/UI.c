@@ -96,9 +96,11 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
 
 	InsertMenuW(hPopMenu, 0, MF_BYPOSITION | MF_STRING, ID_ABOUT, L"About");
 	InsertMenuW(hPopMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-	InsertMenuW(hPopMenu, 2, MF_BYPOSITION | MF_STRING, ID_TOGGLE, g_state ? L"Turn off" : L"Turn on");
-	InsertMenuW(hPopMenu, 3, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-	InsertMenuW(hPopMenu, 4, MF_BYPOSITION | MF_STRING, ID_EXIT, L"Exit");
+	InsertMenuW(hPopMenu, 2, MF_BYPOSITION | MF_STRING | MF_GRAYED, ID_STATE_BANNER, L"Current State");
+	InsertMenuW(hPopMenu, 3, MF_BYPOSITION | MF_STRING | MF_GRAYED, ID_STATE_INFO, g_state ? L"- Running" : L"- Not running");
+	InsertMenuW(hPopMenu, 4, MF_BYPOSITION | MF_STRING, ID_TOGGLE, L"Toggle");
+	InsertMenuW(hPopMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING, ID_EXIT, L"Exit");
 
 	SetMenuDefaultItem(hPopMenu, ID_ABOUT, FALSE);
 	SetFocus(hWnd);

@@ -40,8 +40,8 @@ typedef struct
 #define JV_WEB_SOURCE	L"https://github.com/ied206/Notepad-UTF8"
 #define JV_WEB_RELEASE	L"https://joveler.kr/projects/notepad-utf8.html"
 
-#define DLL_NAME_32 L"NotepadUTF8_x86.dll"
-#define DLL_NAME_64 L"NotepadUTF8_x64.dll"
+#define DLL_NAME_32 L"Notepad-UTF8_x86.dll"
+#define DLL_NAME_64 L"Notepad-UTF8_x64.dll"
 
 #endif // VAR_H_INCLUDED
 

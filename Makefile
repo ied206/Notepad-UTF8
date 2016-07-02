@@ -14,7 +14,7 @@ EXE_RCFLAGS =
 EXE_LIBDIR = 
 EXE_SRCDIR = HookEXE
 EXE_LIB = -lversion -lshlwapi -lcomdlg32 -lgdi32
-EXE_LDFLAGS = 
+EXE_LDFLAGS = -mwindows
 
 EXE_INC_32 = $(EXE_INC)
 EXE_CFLAGS_32 = $(EXE_CFLAGS) -O2 -m32
@@ -26,7 +26,7 @@ EXE_LDFLAGS_32 = $(EXE_LDFLAGS) -s -m32
 EXE_SRCDIR_32 = $(EXE_SRCDIR)
 EXE_OBJDIR_32 = .\\obj\\x86
 EXE_DEP_32 = 
-EXE_OUT_32 = .\\bin\\NotepadUTF8_x86.exe
+EXE_OUT_32 = .\\bin\\Notepad-UTF8_x86.exe
 
 EXE_INC_64 = $(EXE_INC)
 EXE_CFLAGS_64 = $(EXE_CFLAGS) -O2 -m64
@@ -38,7 +38,7 @@ EXE_LDFLAGS_64 = $(EXE_LDFLAGS) -s -m64
 EXE_SRCDIR_64 = $(EXE_SRCDIR)
 EXE_OBJDIR_64 = .\\obj\\x64
 EXE_DEP_64 = 
-EXE_OUT_64 = .\\bin\\NotepadUTF8_x64.exe
+EXE_OUT_64 = .\\bin\\Notepad-UTF8_x64.exe
 
 EXE_OBJ_32 = $(EXE_OBJDIR_32)\\BasicIO.o $(EXE_OBJDIR_32)\\Host.o $(EXE_OBJDIR_32)\\Inject.o $(EXE_OBJDIR_32)\\UI.o $(EXE_OBJDIR_32)\\Main.o $(EXE_OBJDIR_32)\\rc\\HookRes.o
 EXE_OBJ_64 = $(EXE_OBJDIR_64)\\BasicIO.o $(EXE_OBJDIR_64)\\Host.o $(EXE_OBJDIR_64)\\Inject.o $(EXE_OBJDIR_64)\\UI.o $(EXE_OBJDIR_64)\\Main.o $(EXE_OBJDIR_64)\\rc\\HookRes.o
@@ -121,9 +121,9 @@ DLL_LDFLAGS_32 = $(DLL_LDFLAGS) -s -m32
 DLL_OBJDIR_32 = .\\obj\\x86
 DLL_SRCDIR_32 = $(DLL_SRCDIR)
 DLL_DEP_32 = 
-DLL_DEF_32 = .\\bin\\NotepadUTF8_x86.def
-DLL_SHAREDINT_32 = .\\bin\\libNotepadUTF8_x86.a
-DLL_OUT_32 = .\\bin\\NotepadUTF8_x86.dll
+DLL_DEF_32 = .\\bin\\Notepad-UTF8_x86.def
+DLL_SHAREDINT_32 = .\\bin\\libNotepad-UTF8_x86.a
+DLL_OUT_32 = .\\bin\\Notepad-UTF8_x86.dll
 
 DLL_INC_64 = $(DLL_INC)
 DLL_CFLAGS_64 = $(DLL_CFLAGS) -O2 -Wall -m64
@@ -135,14 +135,16 @@ DLL_LDFLAGS_64 = $(DLL_LDFLAGS) -s -m64
 DLL_OBJDIR_64 = .\\obj\\x64
 DLL_SRCDIR_64 = $(DLL_SRCDIR)
 DLL_DEP_64 = 
-DLL_DEF_64 = .\\bin\\NotepadUTF8_x64.def
-DLL_SHAREDINT_64 = .\\bin\\libNotepadUTF8_x64.a
-DLL_OUT_64 = .\\bin\\NotepadUTF8_x64.dll
+DLL_DEF_64 = .\\bin\\Notepad-UTF8_x64.def
+DLL_SHAREDINT_64 = .\\bin\\libNotepad-UTF8_x64.a
+DLL_OUT_64 = .\\bin\\Notepad-UTF8_x64.dll
 
 DLL_OBJ_32 = $(DLL_OBJDIR_32)\\DllMain.o
 DLL_OBJ_64 = $(DLL_OBJDIR_64)\\DllMain.o
-DLL_LINK_32 = -Wl,--output-def=$(DLL_DEF_32) -Wl,--out-implib=$(DLL_SHAREDINT_32) -Wl,--dll $(DLL_OBJ_32)
-DLL_LINK_64 = -Wl,--output-def=$(DLL_DEF_64) -Wl,--out-implib=$(DLL_SHAREDINT_64) -Wl,--dll $(DLL_OBJ_64)
+#DLL_LINK_32 = -Wl,--output-def=$(DLL_DEF_32) -Wl,--out-implib=$(DLL_SHAREDINT_32) -Wl,--dll $(DLL_OBJ_32)
+#DLL_LINK_64 = -Wl,--output-def=$(DLL_DEF_64) -Wl,--out-implib=$(DLL_SHAREDINT_64) -Wl,--dll $(DLL_OBJ_64)
+DLL_LINK_32 = -Wl,--dll $(DLL_OBJ_32)
+DLL_LINK_64 = -Wl,--dll $(DLL_OBJ_64)
 
 
 dll_before_release: 

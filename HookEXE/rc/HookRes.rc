@@ -14,7 +14,7 @@
 // Icon resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_MAINICON       ICON           ".\\HookCycle.ico"
+IDI_MAINICON       ICON           ".\\Notepad-UTF8.ico"
 
 
 

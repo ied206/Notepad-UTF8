@@ -3,7 +3,9 @@
 
 #define ID_ABOUT		2000
 #define ID_TOGGLE		2001
-#define ID_EXIT			2002
+#define ID_STATE_BANNER	2002
+#define ID_STATE_INFO	2003
+#define ID_EXIT			2004
 
 HWND JVUI_InitWindow(HINSTANCE hInstance);
 BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem);
