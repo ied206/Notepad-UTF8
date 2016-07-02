@@ -73,6 +73,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c99" />
 			<Add option="-DBUILD_DLL" />
 			<Add directory="../minhook/include" />
 		</Compiler>

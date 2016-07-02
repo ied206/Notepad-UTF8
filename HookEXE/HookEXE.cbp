@@ -45,6 +45,7 @@
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-std=c99" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -74,6 +75,9 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="Var.h" />
+		<Unit filename="rc/HookRes.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />
