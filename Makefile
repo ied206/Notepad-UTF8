@@ -11,7 +11,7 @@ EXE_INC =
 EXE_CFLAGS = -Wall
 EXE_RESINC = 
 EXE_LIBDIR = 
-EXE_SRCDIR = HookingEXE
+EXE_SRCDIR = HookEXE
 EXE_LIB = -lversion -lshlwapi
 EXE_LDFLAGS = 
 
@@ -93,7 +93,7 @@ DLL_INC = -Iminhook\include
 DLL_CFLAGS = -DBUILD_DLL
 DLL_RESINC = 
 DLL_LIBDIR = 
-DLL_SRCDIR = HookingDLL
+DLL_SRCDIR = HookDLL
 DLL_LIB = -luser32 -lshlwapi -lversion
 DLL_LDFLAGS = 
 
