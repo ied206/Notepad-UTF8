@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 	WCHAR dllFullPath[MAX_PATH];
 	WCHAR dllName[MAX_PATH];
 	DWORD procArch = JV_GetProcArch();
+	DWORD hostArch = JV_GetHostArch();
 	JV_ARG arg;
 
 	// Print program banner
@@ -49,10 +50,18 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
+	// Check bitness
+	if (hostArch != procArch)
+	{
+        fprintf(stderr, "You must use %lubit NotepadUTF8 for %lubit Windows\n\n", hostArch, hostArch);
+        exit(1);
+	}
+
 	// Get dll name (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
 	JV_GetDllName(dllName, sizeof(dllName));
 
 	// Try to Get Debug Privilege
+	/*
 	switch (JV_GetDebugPrivilege())
 	{
 	case JV_DEBUG_PRIV_SUCCESS:
@@ -65,6 +74,7 @@ int main(int argc, char* argv[])
 		puts("Running without administrator privilege\n");
 		break;
 	}
+	*/
 
 	// Get dll full path
 	JV_GetDllFullPath(dllFullPath, sizeof(dllFullPath));
@@ -73,32 +83,21 @@ int main(int argc, char* argv[])
     if (!PathFileExistsW(dllFullPath))
 	{
 		fprintf(stderr, "[ERR] Unable to find ");
-		if (procArch == 32)
+		if (hostArch == 32)
 			fprintf(stderr, "%S\n\n", DLL_NAME_32);
-		else if (procArch == 64)
+		else if (hostArch == 64)
 			fprintf(stderr, "%S\n\n", DLL_NAME_64);
 		exit(1);
 	}
 	printf("dll path : %S\n", dllFullPath);
 
-
-
-	switch (arg.method)
-	{
-	case JV_ARG_METHOD_API:
-		// Inject only to them - I do not want crash of taskmgr and Git Bash
-		JV_InjectByProcName(L"notepad.exe", dllFullPath);
-		JV_InjectByProcName(L"explorer.exe", dllFullPath);
-		// D:\Jang\Build\Source\C\NotepadUTF8\res
-		system("pause");
-		JV_EjectByProcName(L"notepad.exe", dllName);
-		JV_EjectByProcName(L"explorer.exe", dllName);
-		break;
-	case JV_ARG_METHOD_MSG:
-		// Set Global Message Hook
-		JV_SetMessageHook(dllFullPath);
-		break;
-	}
+	// Inject dll to notepand / explorer
+	JV_InjectByProcName(L"notepad.exe", dllFullPath);
+	JV_InjectByProcName(L"explorer.exe", dllFullPath);
+	printf("NotepadUTF8 is running...\nPress Enter to stop ");
+	getchar();
+	JV_EjectByProcName(L"notepad.exe", dllName);
+	JV_EjectByProcName(L"explorer.exe", dllName);
 
 	return 0;
 }
