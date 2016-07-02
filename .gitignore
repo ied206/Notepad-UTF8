@@ -1,10 +1,10 @@
 # CodeBlocks
 *.depend
 *.layout
-HookingExe/bin/
-HookingExe/obj/
-HookingDll/bin/
-HookingDll/obj/
+HookEXE/bin/
+HookEXE/obj/
+HookDLL/bin/
+HookDLL/obj/
 res/
 minhook/
 bin/
