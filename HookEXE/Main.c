@@ -21,14 +21,13 @@
 #include "UI.h"
 #include "BasicIO.h"
 
-
+LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize);
 BOOL JV_GetDllName(WCHAR* dllName, const size_t bufSize);
-LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 HINSTANCE g_hInst;
 HWND g_hWnd;
-int g_state = JV_STATE_TURN_ON;
+int g_state = JV_STATE_TURN_OFF;
 WCHAR g_dllFullPath[MAX_PATH];
 WCHAR g_dllName[MAX_PATH];
 
@@ -43,9 +42,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// Init g_hInst
 	g_hInst = hInstance;
 
-	// Find if BatteryLine is already running.
+	// Find if Notepad-UTF8 is already running.
 	hWnd = FindWindowW(JV_CLASS_NAME, 0);
-	if (hWnd != NULL) // Running BatteryLine found? Terminate it.
+	if (hWnd != NULL) // Running Notepad-UTF8 found? Terminate it.
 	{
 		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_OFF, NIF_INFO, 0, L"Notepad-UTF8 Off");
 		JVUI_DelTrayIcon(hWnd, JV_SYSTRAY_ID_OFF);
@@ -152,7 +151,21 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 						CompileYear(), CompileMonth(), CompileDate());
 				MessageBoxW(hWnd, msgbox, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
 				break;
+			case ID_HELP:
+				#ifdef _DEBUG_CONSOLE
+				puts("  ID_HELP");
+				#endif // _DEBUG_CONSOLE
+				// Print help message
+				MessageBoxW(hWnd, L"Notepad-UTF8 Help Message\n\n"
+								L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
+								L"If Notepad-UTF8 is running, it will be applied to every new Notepad.\n"
+								L"If Notepad-UTF8 is not running, Notepad will be untouched.\n",
+								L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+				break;
 			case ID_TOGGLE:
+				#ifdef _DEBUG_CONSOLE
+				puts("  ID_TOGGLE");
+				#endif // _DEBUG_CONSOLE
                 switch (g_state)
                 {
 				case JV_STATE_TURN_ON:
