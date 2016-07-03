@@ -168,3 +168,16 @@ void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit)
 	if (postquit)
 		PostQuitMessage(WM_QUIT);
 }
+
+void JVUI_PrintHelp()
+{
+	MessageBoxW(g_hWnd, L"[Notepad-UTF8 Help Message]\n\n"
+					L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
+					L"[Command Line Option]\n"
+					L"-q : Launch this program without any notice\n"
+					L"-h : Print this help message and exit.\n\n"
+					L"[Toggle]\n"
+					L"If Notepad-UTF8 is running, it will be applied to every new Notepad.\n"
+					L"If Notepad-UTF8 is not running, Notepad will be untouched.\n\n",
+					L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+}

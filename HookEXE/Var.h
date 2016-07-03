@@ -21,8 +21,8 @@
 #define JV_SYSTRAY_ID_OFF	2
 #define WM_APP_SYSTRAY_POPUP (WM_APP + 0x0001)
 
-#define JV_ARG_METHOD_API	1
-#define JV_ARG_METHOD_MSG	2
+#define JV_ARG_QUIET_OFF	0
+#define JV_ARG_QUIET_ON		1
 #define JV_ARG_HELP_OFF		0
 #define JV_ARG_HELP_ON		1
 
@@ -31,7 +31,7 @@
 
 typedef struct
 {
-    int method; // Hook method
+    int quiet; // Hook method
     int help; // help message
 } JV_ARG;
 
