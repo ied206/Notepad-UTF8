@@ -18,6 +18,8 @@
 
 #include "Inject.h"
 #include "UI.h"
+#include "Host.h"
+#include "BasicIO.h"
 
 LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern HINSTANCE g_hInst;
@@ -169,9 +171,24 @@ void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit)
 		PostQuitMessage(WM_QUIT);
 }
 
+void JVUI_PrintBanner()
+{
+	WCHAR msgbox[JV_BUF_SIZE];
+	StringCchPrintfW(msgbox, JV_BUF_SIZE,
+						L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
+						L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
+						L"[Binary] %s\n"
+						L"[Source] %s\n\n"
+						L"Compile Date : %04d.%02d.%02d\n",
+						JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
+						JV_WEB_RELEASE, JV_WEB_SOURCE,
+						CompileYear(), CompileMonth(), CompileDate());
+	MessageBoxW(g_hWnd, msgbox, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+}
+
 void JVUI_PrintHelp()
 {
-	MessageBoxW(g_hWnd, L"[Notepad-UTF8 Help Message]\n\n"
+	MessageBoxW(g_hWnd, L"[Notepad-UTF8 Help Message]\n"
 					L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
 					L"[Command Line Option]\n"
 					L"-q : Launch this program without any notice\n"

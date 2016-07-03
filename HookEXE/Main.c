@@ -96,6 +96,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	JV_GetDllName(g_dllName, sizeof(g_dllName));
 	JV_GetDllFullPath(g_dllFullPath, sizeof(g_dllFullPath));
 	// Check DLL's existance
+	#ifdef _DEBUG_CONSOLE
+    printf("DLL Path : %S\n", g_dllFullPath);
+	#endif // _DEBUG_CONSOLE
     if (!PathFileExistsW(g_dllFullPath))
 	{
 		WCHAR msgbox[JV_BUF_SIZE];
@@ -104,6 +107,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			StringCchCatW(msgbox, JV_BUF_SIZE, DLL_NAME_32);
 		else if (hostArch == 64)
 			StringCchCatW(msgbox, JV_BUF_SIZE, DLL_NAME_64);
+		fprintf(stderr, "%S\n\n", msgbox);
         MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
 		exit(1);
 	}
@@ -130,9 +134,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-	WCHAR msgbox[JV_BUF_SIZE];
-
-    switch (Msg)
+	switch (Msg)
     {
 	case WM_CREATE:
 		#ifdef _DEBUG_CONSOLE
@@ -173,15 +175,7 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				puts("  ID_ABOUT");
 				#endif // _DEBUG_CONSOLE
 				// Print program banner
-				StringCchPrintfW(msgbox, JV_BUF_SIZE,
-						L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
-						L"[Binary] %s\n"
-						L"[Source] %s\n\n"
-						L"Compile Date : %04d.%02d.%02d\n",
-						JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
-						JV_WEB_RELEASE, JV_WEB_SOURCE,
-						CompileYear(), CompileMonth(), CompileDate());
-				MessageBoxW(hWnd, msgbox, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+				JVUI_PrintBanner();
 				break;
 			case ID_HELP:
 				#ifdef _DEBUG_CONSOLE
@@ -286,12 +280,16 @@ bool JV_CheckWindowVer()
 
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 {
+	WCHAR* dirPath = NULL;
 	WCHAR dllName[MAX_PATH];
 	JV_GetDllName(dllName, sizeof(dllName));
 
-	GetCurrentDirectoryW(bufSize, dllFullPath);
-	StringCbCatW(dllFullPath, bufSize, L"\\");
-	StringCbCatW(dllFullPath, bufSize, dllName);
+	//GetCurrentDirectoryW(bufSize, dllFullPath);
+	//StringCbCatW(dllFullPath, bufSize, L"\\");
+	//StringCbCatW(dllFullPath, bufSize, dllName);
+	GetModuleFileNameW(NULL, dllFullPath, bufSize);
+    dirPath = StrRChrW(dllFullPath, NULL, L'\\')+1;
+	StringCbCopyW(dirPath, bufSize, dllName);
 
 	return dllFullPath;
 }
