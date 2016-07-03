@@ -22,6 +22,7 @@
 #include "BasicIO.h"
 
 LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+bool JV_CheckWindowVer();
 bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg);
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize);
 BOOL JV_GetDllName(WCHAR* dllName, const size_t bufSize);
@@ -61,7 +62,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         exit(0);
 	}
 
-	// Find if Notepad-UTF8 is already running.
+	// Check if this windows is supported by Notepad-UTF8
+	if (!JV_CheckWindowVer())
+	{
+		WCHAR msgbox[JV_BUF_SIZE];
+		StringCchPrintfW(msgbox, JV_BUF_SIZE, L"[ERR] Notepad-UTF8 v%d.%d does not support this version of Windows.\n\nPlease check for an update by visiting project website :\n- %s", JV_VER_MAJOR, JV_VER_MINOR, JV_WEB_RELEASE);
+		fprintf(stderr, "%S\n\n", msgbox);
+        MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
+        return 1;
+	}
+
+	// Check if Notepad-UTF8 is already running.
 	hWnd = FindWindowW(JV_CLASS_NAME, 0);
 	if (hWnd != NULL) // Running Notepad-UTF8 found? Terminate it.
 	{
@@ -76,8 +87,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		WCHAR msgbox[JV_BUF_SIZE];
 		StringCchPrintfW(msgbox, JV_BUF_SIZE, L"[ERR] You must use Notepad-UTF8_x%lu.exe for %lubit Windows.", hostArch == 64 ? 64 : 86, hostArch);
+		fprintf(stderr, "%S\n\n", msgbox);
         MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
-        exit(1);
+        return 1;
 	}
 
 	// Get dll name and full path (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
@@ -162,7 +174,7 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				#endif // _DEBUG_CONSOLE
 				// Print program banner
 				StringCchPrintfW(msgbox, JV_BUF_SIZE,
-						L"Joveler's Notepad-UTF8 %d.%d (%dbit)\n"
+						L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
 						L"[Binary] %s\n"
 						L"[Source] %s\n\n"
 						L"Compile Date : %04d.%02d.%02d\n",
@@ -242,7 +254,35 @@ bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg)
 	return flag_err;
 }
 
+bool JV_CheckWindowVer()
+{
+    JV_WIN_VER wv;
+    JV_GetHostVer(&wv);
 
+	// XP SP3
+	if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 5, 1, 2600, 5512))
+		return true;
+	// Vista SP2
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 6, 0, 6001, 18000))
+		return true;
+	// 7 (6.1.7600.16385, 6.1.7601.18917) (Tested)
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L2, 6, 1, 7600, 16385))
+		return true;
+	// 8 SP2
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 6, 2, 9200, 16384))
+		return true;
+	// 8.1 Update 1
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 6, 3, 9600, 17415))
+		return true;
+	// 10.0.10240
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 10, 0, 10240, 16384))
+		return true;
+	// 10.0.10586
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 10, 0, 10586, 0))
+		return true;
+	else
+		return false;
+}
 
 WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 {
