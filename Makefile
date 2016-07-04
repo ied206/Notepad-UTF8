@@ -103,6 +103,7 @@ $(EXE_OBJDIR_64)\\Main.o: $(EXE_SRCDIR)\\Main.c
 $(EXE_OBJDIR_64)\\rc\\HookRes.o: $(EXE_SRCDIR)\\rc\\HookRes.rc
 	$(WINDRES) $(EXE_RCFLAGS_64) -i $(EXE_SRCDIR)\\rc\\HookRes.rc -J rc -o $(EXE_OBJDIR_64)\\rc\\HookRes.o -O coff $(EXE_INC)
 
+
 DLL_INC = -Iminhook\\include
 DLL_CFLAGS = -DBUILD_DLL -std=c99 
 DLL_RESINC = 
