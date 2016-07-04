@@ -7,7 +7,7 @@ Written in C99, for Win32 platform.
 # Usage
 If Notepad-UTF8 is run, every instance of Notepad will use UTF-8 as default encoding.
 
-Precompiled binary and installer is distributed at [project homepage](https://joveler.kr/project/notepad-utf8.html).
+Precompiled binary and installer is distributed at [project homepage](https://joveler.kr/project/notepad-utf8.html).  
 Instead, you can compile and launch `Notepad-UTF8_[Arch].exe` yourself.
 
 
