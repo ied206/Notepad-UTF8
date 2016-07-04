@@ -5,18 +5,7 @@
 #include "resource.h"
 #undef APSTUDIO_HIDDEN_SYMBOLS
 
-
-
-//
-// Icon resources
-//
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDI_MAINICON       ICON           ".\\Notepad-UTF8.ico"
-
-
-
-//
-// Manifest resources
-//
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 CREATEPROCESS_MANIFEST_RESOURCE_ID       RT_MANIFEST    ".\\Hook.manifest"
+

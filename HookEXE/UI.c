@@ -119,6 +119,7 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
 
 	InsertMenuW(hPopMenu, 0, MF_BYPOSITION | MF_STRING, ID_ABOUT, L"About");
 	InsertMenuW(hPopMenu, 1, MF_BYPOSITION | MF_STRING, ID_HELP, L"Help");
+	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING, ID_LICENSE, L"License");
 	InsertMenuW(hPopMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
 	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_BANNER, L"Current State");
 	InsertMenuW(hPopMenu, 7, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_INFO, g_state ? L"- Running" : L"- Not running");
@@ -192,6 +193,13 @@ void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit)
 	JV_TurnOff(g_dllName);
 	if (postquit)
 		PostQuitMessage(WM_QUIT);
+}
+
+
+void JVUI_ViewLicense(HWND hWnd)
+{
+	// Open BatteryLine.ini
+	ShellExecuteW(hWnd, L"open", L"https://github.com/ied206/Notepad-UTF8/blob/master/LICENSE", NULL, NULL, SW_SHOW);
 }
 
 void JVUI_PrintBanner()

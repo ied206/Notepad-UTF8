@@ -184,6 +184,9 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				// Print help message
 				JVUI_PrintHelp();
 				break;
+			case ID_LICENSE:
+				JVUI_ViewLicense(g_hWnd);
+				break;
 			case ID_TOGGLE:
 				#ifdef _DEBUG_CONSOLE
 				puts("  ID_TOGGLE");
