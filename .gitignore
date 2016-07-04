@@ -9,6 +9,7 @@ res/
 minhook/
 bin/
 obj/
+*.aps
 
 # Object files
 *.o
