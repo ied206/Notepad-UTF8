@@ -8,7 +8,7 @@
 		</security>
 	</trustInfo>
     <assemblyIdentity 
-        type="win32" 
+        type="Win32" 
         name="Joveler.Notepad-UTF8.HookEXE"
         version="1.0.0.0"
         processorArchitecture="*"
@@ -17,7 +17,7 @@
 	<dependency>
 		<dependentAssembly>
 			<assemblyIdentity
-				type="win32"
+				type="Win32"
 				name="Microsoft.Windows.Common-Controls"
 				version="6.0.0.0"
 				processorArchitecture="*"

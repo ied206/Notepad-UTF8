@@ -28,10 +28,16 @@ extern int g_state;
 extern WCHAR g_dllFullPath[MAX_PATH];
 extern WCHAR g_dllName[MAX_PATH];
 
+int g_dpiX = 0;
+int g_dpiY = 0;
+
 HWND JVUI_InitWindow(HINSTANCE hInstance)
 {
 	HWND hWnd;
 	WNDCLASSEXW WndClsEx;
+
+	// Get System DPI (System DPI Awareness)
+	JVUI_GetSystemDPI();
 
 	// Create Window
 	ZeroMemory(&WndClsEx, sizeof(WNDCLASSEXW));
@@ -89,6 +95,21 @@ HWND JVUI_InitWindow(HINSTANCE hInstance)
 	return hWnd = NULL;
 }
 
+void JVUI_GetSystemDPI()
+{
+	// Scale 100 == DPI 96
+	// Scale 125 == DPI 120
+	// Scale 150 == DPI 144
+	// Scale 175 == DPI 168
+	// Scale 200 == DPI 192
+
+	// Get native resolution
+	HDC desktopDC;
+
+	desktopDC = GetDC(NULL);
+	g_dpiX = GetDeviceCaps(desktopDC, LOGPIXELSX);
+	g_dpiY = GetDeviceCaps(desktopDC, LOGPIXELSY);
+}
 
 // Right click BatteryLine icon in Notification Area
 BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
@@ -127,14 +148,15 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
 
 void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR lpInfoStr)
 {
-	NOTIFYICONDATA nid;
-	ZeroMemory(&nid, sizeof(NOTIFYICONDATA));
+	NOTIFYICONDATAW nid;
+	ZeroMemory(&nid, sizeof(NOTIFYICONDATAW));
 
 	// Notification Icon
-	nid.cbSize 		= sizeof(NOTIFYICONDATA);
+	nid.cbSize 		= sizeof(NOTIFYICONDATAW);
 	nid.hWnd 		= hWnd;
 	nid.uID 		= uID;
 	nid.uFlags 		= NIF_ICON | flag;
+	nid.dwInfoFlags = NIIF_NOSOUND | NIIF_USER;
 
 	 // Don't throw an message
 	if (uCallbackMsg != 0)
@@ -155,8 +177,9 @@ void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR
 
 void JVUI_DelTrayIcon(HWND hWnd, UINT uID)
 {
-	NOTIFYICONDATA nid;
-
+	NOTIFYICONDATAW nid;
+	ZeroMemory(&nid, sizeof(NOTIFYICONDATAW));
+	nid.cbSize = sizeof(NOTIFYICONDATAW);
 	nid.hWnd = hWnd;
 	nid.uID = uID;
 

@@ -22,4 +22,4 @@ IDI_MAINICON       ICON           ".\\Notepad-UTF8.ico"
 // Manifest resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_MANIFEST       RT_MANIFEST    ".\\Hook.manifest"
+CREATEPROCESS_MANIFEST_RESOURCE_ID       RT_MANIFEST    ".\\Hook.manifest"

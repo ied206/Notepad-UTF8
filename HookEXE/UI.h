@@ -9,6 +9,7 @@
 #define ID_EXIT			2005
 
 HWND JVUI_InitWindow(HINSTANCE hInstance);
+void JVUI_GetSystemDPI();
 BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem);
 void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR lpInfoStr);
 void JVUI_DelTrayIcon(HWND hWnd, UINT uID);
