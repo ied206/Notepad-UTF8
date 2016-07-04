@@ -8,7 +8,7 @@ Written in C99, for Win32 platform.
 If Notepad-UTF8 is run, every instance of Notepad will use UTF-8 as default encoding.
 
 Precompiled binary and installer is distributed at [project homepage](https://joveler.kr/project/notepad-utf8.html).
-Or you can compile and launch `Notepad-UTF8_[Arch].exe` yourself.
+Instead, you can compile and launch `Notepad-UTF8_[Arch].exe` yourself.
 
 
 # Supported Windows
@@ -62,14 +62,14 @@ Notepad-UTF8 supports Windows XP to 10.
     <td>X<br></td>
   </tr>
   <tr>
-    <td>10 (Build 10240)<br></td>
+    <td>10 (Build 10240)</td>
     <td>O</td>
     <td>O</td>
     <td>X</td>
     <td>X</td>
   </tr>
   <tr>
-    <td>10 (Build 10586)<br></td>
+    <td>10 (Build 10586)</td>
     <td>O</td>
     <td>O</td>
     <td>O</td>
@@ -77,10 +77,11 @@ Notepad-UTF8 supports Windows XP to 10.
   </tr>
 </table>
 
-Notepad-UTF8 needs Notepad's _g_ftOpenAs address to work, which means it works with whitelist.
+Due to my lack of time, I could not test Notepad-UTF8 in all of supported environments.  
+Any contribution including testing on untested environments is welcome.
 
-If you want Notepad-UTF8 to support more versions of Windows, contact me with necessary resources.  
-Any contribution including testing on untested environments is also welcome.
+Notepad-UTF8 needs Notepad's _g_ftOpenAs address to work, which means it works with whitelist.  
+If you want Notepad-UTF8 to support more versions of Windows, create an issue with necessary resources at GitHub.
 
 
 # Compile
