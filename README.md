@@ -12,9 +12,6 @@ Or you can compile and launch `Notepad-UTF8_[Arch].exe`.
 
 # Supported Windows
 Notepad-UTF8 supports Windows XP to 10.  
-Notepad-UTF8 needs Notepad's _g_ftOpenAs address to work, which means it works with whitelist.  
-If you want Notepad-UTF8 to support more versions of Windows, contact me with necessary resources.  
-Any contribution including testing on untested environments is also welcome.
 
 <table>
   <tr>
@@ -31,9 +28,9 @@ Any contribution including testing on untested environments is also welcome.
   <tr>
     <td>XP<br></td>
     <td>O</td>
-    <td>-</td>
+    <td>X</td>
     <td>O</td>
-    <td>-</td>
+    <td>X</td>
   </tr>
   <tr>
     <td>Vista</td>
@@ -79,7 +76,10 @@ Any contribution including testing on untested environments is also welcome.
   </tr>
 </table>
 
+Notepad-UTF8 needs Notepad's _g_ftOpenAs address to work, which means it works with whitelist.
 
+If you want Notepad-UTF8 to support more versions of Windows, contact me with necessary resources.  
+Any contribution including testing on untested environments is also welcome.
 
 # Compile
 This program is built under this environment:
