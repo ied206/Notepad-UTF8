@@ -80,7 +80,7 @@ Notepad-UTF8 supports Windows XP to 10.
 Due to my lack of time, I could not test Notepad-UTF8 in all of supported environments.  
 Any contribution including testing on untested environments is welcome.
 
-Notepad-UTF8 needs Notepad's _g_ftOpenAs address to work, which means it works with whitelist.  
+Notepad-UTF8 needs Notepad's `_g_ftOpenAs` address to work, which means it works with whitelist.  
 If you want Notepad-UTF8 to support more versions of Windows, create an issue with necessary resources at GitHub.
 
 
@@ -99,7 +99,7 @@ You can compile BatteryLine yourself using MinGW-w64.
 > git clone https://github.com/ied206/Notepad-UTF8.git
 > cd Notepad-UTF8
 ```
-- Clone and build [minhook](https://github.com/TsudaKageyu/minhook).
+- Clone and build [minhook](https://github.com/TsudaKageyu/minhook).  
 ```
 Download minhook
 > git clone https://github.com/TsudaKageyu/minhook.git
@@ -110,11 +110,12 @@ Build x64 linkable object
 > mingw32-make
 > ren libMinHook.a libMinHook_x64.a
 
-Build x86 linkable object
-- patch Makefile
+Patch Makefile to build x86 version
     add '-m32' argument to Makefile's CFLAGS and LDFLAGS
     add '-F pe-i386' argument to Makefile's WINDRES
-    You may refer to this [diff](https://gist.github.com/ied206/2bd096a85089e816a897fa4266cf5779).
+    You may refer to this gist : https://gist.github.com/ied206/2bd096a85089e816a897fa4266cf5779
+
+Build x86 linkable object
 > mingw32-make clean
 > mingw32-make
 > ren libMinHook.a libMinHook_x86.a
