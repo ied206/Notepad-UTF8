@@ -111,9 +111,9 @@ Build x64 linkable object
 > ren libMinHook.a libMinHook_x64.a
 
 Patch Makefile to build x86 version
-    add '-m32' argument to Makefile's CFLAGS and LDFLAGS
-    add '-F pe-i386' argument to Makefile's WINDRES
-    You may refer to this gist : https://gist.github.com/ied206/2bd096a85089e816a897fa4266cf5779
+  add '-m32' argument to Makefile's CFLAGS and LDFLAGS
+  add '-F pe-i386' argument to Makefile's WINDRES
+  You may refer to this gist : https://gist.github.com/ied206/2bd096a85089e816a897fa4266cf5779
 
 Build x86 linkable object
 > mingw32-make clean
