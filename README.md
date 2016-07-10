@@ -93,7 +93,7 @@ You can compile BatteryLine yourself using MinGW-w64.
 
 
 ## Using MinGW-w64 and make
-1\. Add MinGW-w64 toolchain to PATH. Make sure `gcc, g++, ar, windres, mingw32-make` can be called in console.
+1\. Add MinGW-w64 toolchain to PATH. Make sure `gcc, g++, ar, windres, mingw32-make` can be called in console.  
 2\. Clone [Notepad-UTF8](https://github.com/ied206/Notepad-UTF8).
 ```
 > git clone https://github.com/ied206/Notepad-UTF8.git
@@ -125,7 +125,7 @@ Build x86 linkable object
 > cd ..
 > mingw32-make
 ```
-5\. x86 and x64 binary is compiled under `bin` folder.
+5\. x86 and x64 binaries are compiled under `bin` folder.
 
 
 ## Microsoft Visual Studio
