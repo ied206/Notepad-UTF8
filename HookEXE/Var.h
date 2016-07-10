@@ -37,8 +37,8 @@ typedef struct
 
 #define JV_VER_MAJOR	1
 #define JV_VER_MINOR	0
+#define JV_WEB_BINARY	L"https://ied206.github.io/Notepad-UTF8"
 #define JV_WEB_SOURCE	L"https://github.com/ied206/Notepad-UTF8"
-#define JV_WEB_BINARY	L"https://joveler.kr/project/notepad-utf8.html"
 
 #define DLL_NAME_32 L"Notepad-UTF8_x86.dll"
 #define DLL_NAME_64 L"Notepad-UTF8_x64.dll"

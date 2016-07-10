@@ -197,7 +197,16 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				// Print help message
 				JVUI_PrintHelp(g_hWnd);
 				break;
+			case ID_HOMEPAGE:
+				#ifdef _DEBUG_CONSOLE
+				puts(" ID_HOMEPAGE");
+				#endif // _DEBUG_CONSOLE
+				JVUI_OpenHomepage(g_hWnd);
+				break;
 			case ID_LICENSE:
+				#ifdef _DEBUG_CONSOLE
+				puts(" ID_LICENSE");
+				#endif // _DEBUG_CONSOLE
 				JVUI_OpenLicense(g_hWnd);
 				break;
 			case ID_TOGGLE:
@@ -224,10 +233,7 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         break;
 	case WM_CLOSE: // 0x0010
 		#ifdef _DEBUG_CONSOLE
-		if (Msg == WM_CLOSE)
-			puts("WM_CLOSE");
-		else if (Msg == WM_DESTROY)
-			puts("WM_DESTROY");
+		puts("WM_CLOSE");
 		#endif // _DEBUG_CONSOLE
 		JVUI_WM_CLOSE(hWnd, TRUE);
         break;

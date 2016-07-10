@@ -120,13 +120,15 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
 
 	InsertMenuW(hPopMenu, 0, MF_BYPOSITION | MF_STRING, ID_ABOUT, L"About");
 	InsertMenuW(hPopMenu, 1, MF_BYPOSITION | MF_STRING, ID_HELP, L"Help");
-	InsertMenuW(hPopMenu, 2, MF_BYPOSITION | MF_STRING, ID_LICENSE, L"License");
-	InsertMenuW(hPopMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_BANNER, L"Current State");
-	InsertMenuW(hPopMenu, 7, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_INFO, g_state ? L"- Running" : L"- Not running");
-	InsertMenuW(hPopMenu, 8, MF_BYPOSITION | MF_STRING, ID_TOGGLE, L"Toggle");
 	InsertMenuW(hPopMenu, 10, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-	InsertMenuW(hPopMenu, 11, MF_BYPOSITION | MF_STRING, ID_EXIT, L"Exit");
+	InsertMenuW(hPopMenu, 11, MF_BYPOSITION | MF_STRING, ID_HOMEPAGE, L"Homepage");
+	InsertMenuW(hPopMenu, 12, MF_BYPOSITION | MF_STRING, ID_LICENSE, L"License");
+	InsertMenuW(hPopMenu, 20, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+	InsertMenuW(hPopMenu, 21, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_BANNER, L"Current State");
+	InsertMenuW(hPopMenu, 22, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_INFO, g_state ? L"- Running" : L"- Not running");
+	InsertMenuW(hPopMenu, 23, MF_BYPOSITION | MF_STRING, ID_TOGGLE, L"Toggle");
+	InsertMenuW(hPopMenu, 30, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+	InsertMenuW(hPopMenu, 31, MF_BYPOSITION | MF_STRING, ID_EXIT, L"Exit");
 
 	SetMenuDefaultItem(hPopMenu, ID_ABOUT, FALSE);
 	SetFocus(hWnd);
@@ -196,6 +198,12 @@ void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit)
 		PostQuitMessage(WM_QUIT);
 }
 
+
+void JVUI_OpenHomepage(HWND hWnd)
+{
+	// Open GitHub repository's LICENSE page
+	ShellExecuteW(hWnd, L"open", JV_WEB_BINARY, NULL, NULL, SW_SHOW);
+}
 
 void JVUI_OpenLicense(HWND hWnd)
 {
