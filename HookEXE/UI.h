@@ -15,8 +15,8 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem);
 void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR lpInfoStr);
 void JVUI_DelTrayIcon(HWND hWnd, UINT uID);
 void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit);
-void JVUI_ViewLicense(HWND hWnd);
-void JVUI_PrintBanner();
-void JVUI_PrintHelp();
+void JVUI_OpenLicense(HWND hWnd);
+void JVUI_PrintBanner(HWND hWnd);
+void JVUI_PrintHelp(HWND hWnd);
 
 #endif // UI_H_INCLUDED

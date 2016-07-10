@@ -39,7 +39,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND hWnd;
 	MSG	Msg;
 	int argc = 0;
-	LPWSTR* argv;
+	LPWSTR* argv = NULL;
 	DWORD procArch = JV_GetProcArch();
 	DWORD hostArch = JV_GetHostArch();
 
@@ -51,45 +51,57 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (JV_ParseArg(argc, argv, &g_arg))
 	{
 		fprintf(stderr, "[ERR] Invalid argument\n\n");
-		MessageBox(g_hWnd, L"[ERR] Invalid argument", L"Error", MB_ICONERROR | MB_OK);
+		MessageBox(NULL, L"[ERR] Invalid argument", L"Error", MB_ICONERROR | MB_OK);
 		exit(1);
 	}
 
-	// Print Help Message and exit if -h /? is used
+	// Print Help Message and exit if '-h' '/?' is used
 	if (g_arg.help)
 	{
-        JVUI_PrintHelp();
+        JVUI_PrintHelp(NULL);
         exit(0);
 	}
 
 	// Check if this windows is supported by Notepad-UTF8
 	if (!JV_CheckWindowVer())
 	{
-		WCHAR msgbox[JV_BUF_SIZE];
-		StringCchPrintfW(msgbox, JV_BUF_SIZE, L"[ERR] Notepad-UTF8 v%d.%d does not support this version of Windows.\n\nPlease check for an update by visiting project website :\n- %s", JV_VER_MAJOR, JV_VER_MINOR, JV_WEB_RELEASE);
-		fprintf(stderr, "%S\n\n", msgbox);
-        MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
-        return 1;
+		if (!g_arg.quiet)
+		{
+			WCHAR msgbox[JV_BUF_SIZE];
+			StringCchPrintfW(msgbox, JV_BUF_SIZE,
+								L"[ERR] Notepad-UTF8 v%d.%d does not support this version of Windows.\n\n"
+								L"Please check for an update by visiting project website :\n- %s",
+								JV_VER_MAJOR, JV_VER_MINOR, JV_WEB_BINARY);
+			fprintf(stderr, "%S\n\n", msgbox);
+			MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
+		}
+        exit(1);
+	}
+
+	// Check bitness
+	if (hostArch != procArch)
+	{
+		if (!g_arg.quiet)
+		{
+			WCHAR msgbox[JV_BUF_SIZE];
+			StringCchPrintfW(msgbox, JV_BUF_SIZE, L"[ERR] You must use Notepad-UTF8_x%lu.exe for %lubit Windows.", hostArch == 64 ? 64 : 86, hostArch);
+			fprintf(stderr, "%S\n\n", msgbox);
+			MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
+		}
+        exit(1);
 	}
 
 	// Check if Notepad-UTF8 is already running.
 	hWnd = FindWindowW(JV_CLASS_NAME, 0);
 	if (hWnd != NULL) // Running Notepad-UTF8 found? Terminate it.
 	{
-		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_OFF, (g_arg.quiet ? 0x0 : NIF_INFO), 0, L"Notepad-UTF8 Off");
-		JVUI_DelTrayIcon(hWnd, JV_SYSTRAY_ID_OFF);
+		if (!g_arg.quiet)
+		{
+			JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_OFF, NIF_INFO, 0, L"Notepad-UTF8 Off");
+			JVUI_DelTrayIcon(hWnd, JV_SYSTRAY_ID_OFF);
+		}
 		SendMessageW(hWnd, WM_CLOSE, 0, 0);
-		return 0;
-	}
-
-	// Check bitness
-	if (hostArch != procArch)
-	{
-		WCHAR msgbox[JV_BUF_SIZE];
-		StringCchPrintfW(msgbox, JV_BUF_SIZE, L"[ERR] You must use Notepad-UTF8_x%lu.exe for %lubit Windows.", hostArch == 64 ? 64 : 86, hostArch);
-		fprintf(stderr, "%S\n\n", msgbox);
-        MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
-        return 1;
+		exit(0);
 	}
 
 	// Get dll name and full path (NotepadUTF8_x64.dll || NotepadUTF8_x86.dll)
@@ -140,7 +152,8 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 		#ifdef _DEBUG_CONSOLE
 		puts("WM_CREATE");
 		#endif // _DEBUG_CONSOLE
-		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_ON, NIF_MESSAGE | NIF_TIP | (g_arg.quiet ? 0x0 : NIF_INFO), WM_APP_SYSTRAY_POPUP, L"Notepad-UTF8 On");
+		// popup ballon notification only when quiet option is not used
+		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_ON, NIF_MESSAGE | NIF_TIP | (g_arg.quiet ? 0 : NIF_INFO), WM_APP_SYSTRAY_POPUP, L"Notepad-UTF8 On");
 		break;
 	case WM_APP_SYSTRAY_POPUP: // systray msg callback
 		#ifdef _DEBUG_CONSOLE
@@ -175,17 +188,17 @@ LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 				puts("  ID_ABOUT");
 				#endif // _DEBUG_CONSOLE
 				// Print program banner
-				JVUI_PrintBanner();
+				JVUI_PrintBanner(g_hWnd);
 				break;
 			case ID_HELP:
 				#ifdef _DEBUG_CONSOLE
 				puts("  ID_HELP");
 				#endif // _DEBUG_CONSOLE
 				// Print help message
-				JVUI_PrintHelp();
+				JVUI_PrintHelp(g_hWnd);
 				break;
 			case ID_LICENSE:
-				JVUI_ViewLicense(g_hWnd);
+				JVUI_OpenLicense(g_hWnd);
 				break;
 			case ID_TOGGLE:
 				#ifdef _DEBUG_CONSOLE

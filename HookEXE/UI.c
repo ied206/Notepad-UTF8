@@ -23,10 +23,11 @@
 
 LRESULT CALLBACK WndProcedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 extern HINSTANCE g_hInst;
-extern HWND g_hWnd;
+// extern HWND g_hWnd;
 extern int g_state;
 extern WCHAR g_dllFullPath[MAX_PATH];
 extern WCHAR g_dllName[MAX_PATH];
+extern JV_ARG g_arg;
 
 int g_dpiX = 0;
 int g_dpiY = 0;
@@ -119,7 +120,7 @@ BOOL JVUI_ShowPopupMenu(HWND hWnd, POINT *curpos, int wDefaultItem)
 
 	InsertMenuW(hPopMenu, 0, MF_BYPOSITION | MF_STRING, ID_ABOUT, L"About");
 	InsertMenuW(hPopMenu, 1, MF_BYPOSITION | MF_STRING, ID_HELP, L"Help");
-	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING, ID_LICENSE, L"License");
+	InsertMenuW(hPopMenu, 2, MF_BYPOSITION | MF_STRING, ID_LICENSE, L"License");
 	InsertMenuW(hPopMenu, 5, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
 	InsertMenuW(hPopMenu, 6, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_BANNER, L"Current State");
 	InsertMenuW(hPopMenu, 7, MF_BYPOSITION | MF_STRING | MF_DISABLED, ID_STATE_INFO, g_state ? L"- Running" : L"- Not running");
@@ -160,7 +161,7 @@ void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR
 	nid.dwInfoFlags = NIIF_NOSOUND | NIIF_USER;
 
 	 // Don't throw an message
-	if (uCallbackMsg != 0)
+	if (uCallbackMsg)
 		nid.uCallbackMessage = uCallbackMsg;
 
 #ifdef _MSC_VER
@@ -196,36 +197,38 @@ void JVUI_WM_CLOSE(HWND hWnd, uint8_t postquit)
 }
 
 
-void JVUI_ViewLicense(HWND hWnd)
+void JVUI_OpenLicense(HWND hWnd)
 {
-	// Open BatteryLine.ini
+	// Open GitHub repository's LICENSE page
 	ShellExecuteW(hWnd, L"open", L"https://github.com/ied206/Notepad-UTF8/blob/master/LICENSE", NULL, NULL, SW_SHOW);
 }
 
-void JVUI_PrintBanner()
+void JVUI_PrintBanner(HWND hWnd)
 {
-	WCHAR msgbox[JV_BUF_SIZE];
-	StringCchPrintfW(msgbox, JV_BUF_SIZE,
+	WCHAR msg[JV_BUF_SIZE];
+	StringCchPrintfW(msg, JV_BUF_SIZE,
 						L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
 						L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
 						L"[Binary] %s\n"
 						L"[Source] %s\n\n"
-						L"Compile Date : %04d.%02d.%02d\n",
+						L"Build %04d%02d%02d",
 						JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
-						JV_WEB_RELEASE, JV_WEB_SOURCE,
-						CompileYear(), CompileMonth(), CompileDate());
-	MessageBoxW(g_hWnd, msgbox, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+						JV_WEB_BINARY, JV_WEB_SOURCE,
+						CompileYear(), CompileMonth(), CompileDay());
+	printf("%S\n\n", msg);
+	MessageBoxW(hWnd, msg, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
 }
 
-void JVUI_PrintHelp()
+void JVUI_PrintHelp(HWND hWnd)
 {
-	MessageBoxW(g_hWnd, L"[Notepad-UTF8 Help Message]\n"
+	WCHAR* msg = 	L"[Notepad-UTF8 Help Message]\n"
 					L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
 					L"[Command Line Option]\n"
-					L"-q : Launch this program without any notice\n"
+					L"-q : Launch this program without notification.\n"
 					L"-h : Print this help message and exit.\n\n"
 					L"[Toggle]\n"
 					L"If Notepad-UTF8 is running, it will be applied to every new Notepad.\n"
-					L"If Notepad-UTF8 is not running, Notepad will be untouched.\n\n",
-					L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
+					L"If Notepad-UTF8 is not running, Notepad will be untouched.";
+	printf("%S\n\n", msg);
+	MessageBoxW(hWnd, msg, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
 }

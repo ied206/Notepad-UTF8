@@ -29,8 +29,8 @@
 				</Linker>
 			</Target>
 			<Target title="64_Debug">
-				<Option output="bin/Debug64/Notepad-UTF8_x64" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug64/" />
+				<Option output="bin/Debug/Notepad-UTF8_x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/64_Debug/" />
 				<Option type="1" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>
@@ -39,8 +39,8 @@
 				</Compiler>
 			</Target>
 			<Target title="64_Release">
-				<Option output="bin/Release64/Notepad-UTF8_x64" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release64/" />
+				<Option output="bin/Release/Notepad-UTF8_x64" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/64_Release/" />
 				<Option type="0" />
 				<Option compiler="gnu_gcc_compiler_64" />
 				<Compiler>

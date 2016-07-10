@@ -64,7 +64,7 @@ void BinaryDump(const uint8_t buf[], const uint32_t bufsize)
 	return;
 }
 
-int BytePrefix (int sizelen)
+int BytePrefix(int sizelen)
 {
 	int whatbyte;
 
@@ -80,10 +80,11 @@ int BytePrefix (int sizelen)
 	return whatbyte;
 }
 
-int CompileYear () // 컴파일한 년도
+// Get compiled year from MinGW-w64's __DATE__
+int CompileYear()
 {
 	const char macro[16] = __DATE__;
-	char stmp[8] = {0}; // 전체 0으로 초기화
+	char stmp[8] = {0};
 
 	stmp[0] = macro[7];
 	stmp[1] = macro[8];
@@ -94,29 +95,29 @@ int CompileYear () // 컴파일한 년도
 	return atoi(stmp);
 }
 
-int CompileMonth ()
-{ // 컴파일한 월 표시
+// Get compiled month from MinGW-w64's __DATE__
+int CompileMonth()
+{
 	const char macro[16] = __DATE__;
 	const char smonth[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 	int i = 0;
 
-// 월 감지
 	for (i = 0; i < 12; i++)
 	{
 		if (strstr(macro, smonth[i]) != NULL)
 			return i + 1;
 	}
 
-// -1이 반환되는 경우는 월 인식 불가
+	// return -1 for error
 	return -1;
 }
 
-int CompileDate ()
-{ // 컴파일한 일 표시
+// Get compiled day from MinGW-w64's __DATE__
+int CompileDay()
+{
 	const char macro[16] = __DATE__;
-	char stmp[4] = {0}; // 전체 0으로 초기화
+	char stmp[4] = {0};
 
-// 일 감지
 	stmp[0] = macro[4];
 	stmp[1] = macro[5];
 	stmp[2] = '\0';

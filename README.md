@@ -45,7 +45,7 @@ Notepad-UTF8 supports Windows XP to 10.
     <td>O</td>
     <td>O</td>
     <td>O<br></td>
-    <td>X</td>
+    <td>O</td>
   </tr>
   <tr>
     <td>8</td>
@@ -59,7 +59,7 @@ Notepad-UTF8 supports Windows XP to 10.
     <td>O</td>
     <td>O</td>
     <td>O</td>
-    <td>X<br></td>
+    <td>O<br></td>
   </tr>
   <tr>
     <td>10 (Build 10240)</td>
@@ -93,13 +93,13 @@ You can compile BatteryLine yourself using MinGW-w64.
 
 
 ## Using MinGW-w64 and make
-- Add MinGW-w64 toolchain to PATH. Make sure `gcc, g++, ar, windres, mingw32-make` can be called in console.
-- Clone [Notepad-UTF8](https://github.com/ied206/Notepad-UTF8).
+1\. Add MinGW-w64 toolchain to PATH. Make sure `gcc, g++, ar, windres, mingw32-make` can be called in console.
+2\. Clone [Notepad-UTF8](https://github.com/ied206/Notepad-UTF8).
 ```
 > git clone https://github.com/ied206/Notepad-UTF8.git
 > cd Notepad-UTF8
 ```
-- Clone and build [minhook](https://github.com/TsudaKageyu/minhook).  
+3\. Clone and build [minhook](https://github.com/TsudaKageyu/minhook).  
 ```
 Download minhook
 > git clone https://github.com/TsudaKageyu/minhook.git
@@ -120,12 +120,12 @@ Build x86 linkable object
 > mingw32-make
 > ren libMinHook.a libMinHook_x86.a
 ```
-- Build project with mingw32-make. For example, type this command in root of source:  
+4\. Build project with mingw32-make
 ```
 > cd ..
 > mingw32-make
 ```
-- x86 and x64 binary is compiled under `bin` folder.
+5\. x86 and x64 binary is compiled under `bin` folder.
 
 
 ## Microsoft Visual Studio

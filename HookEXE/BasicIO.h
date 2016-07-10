@@ -2,10 +2,10 @@
 #define __BasicInput_h
 
 void BinaryDump(const uint8_t buf[], const uint32_t bufsize);
-int BytePrefix (int sizelen);
-int CompileYear ();
-int CompileMonth ();
-int CompileDate ();
+int BytePrefix(int sizelen);
+int CompileYear();
+int CompileMonth();
+int CompileDay();
 
 #define ms2rsec(X) ((X) / 1000)
 #define ms2rmin(X) ((X) / 1000 / 60)
