@@ -263,6 +263,8 @@ bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg)
 				arg->quiet = JV_ARG_QUIET_ON;
 			else if (StrCmpIW(argv[i], L"-h") == 0 || StrCmpIW(argv[i], L"--help") == 0 || StrCmpIW(argv[i], L"/?") == 0 || StrCmpIW(argv[i], L"-?") == 0)
 				arg->help = JV_ARG_HELP_ON;
+			else
+				flag_err = true;
 		}
 	}
 
@@ -306,9 +308,6 @@ WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 	WCHAR dllName[MAX_PATH];
 	JV_GetDllName(dllName, sizeof(dllName));
 
-	//GetCurrentDirectoryW(bufSize, dllFullPath);
-	//StringCbCatW(dllFullPath, bufSize, L"\\");
-	//StringCbCatW(dllFullPath, bufSize, dllName);
 	GetModuleFileNameW(NULL, dllFullPath, bufSize);
     dirPath = StrRChrW(dllFullPath, NULL, L'\\')+1;
 	StringCbCopyW(dirPath, bufSize, dllName);
