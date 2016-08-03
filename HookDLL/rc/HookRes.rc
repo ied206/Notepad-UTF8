@@ -28,6 +28,6 @@ VS_VERSION_INFO VERSIONINFO
         VALUE "Translation", 0x409, 1200
     }
 }
-IDI_MAINICON       ICON           ".\\Notepad-UTF8.ico"
+
 CREATEPROCESS_MANIFEST_RESOURCE_ID       RT_MANIFEST    ".\\Hook.manifest"
 
