@@ -420,6 +420,17 @@ BOOL JV_UnHookCreateProcess()
 		return FALSE;
 	}
 
+	if (MH_RemoveHook((LPVOID) &CreateProcessA) != MH_OK)
+	{
+		fprintf(stderr, "[ERR] MH_RemoveHook(&CreateProcessA) failed\n\n");
+		return FALSE;
+	}
+	if (MH_RemoveHook((LPVOID) &CreateProcessW) != MH_OK)
+	{
+		fprintf(stderr, "[ERR] MH_RemoveHook(&CreateProcessW) failed\n\n");
+		return FALSE;
+	}
+
 	if (MH_Uninitialize() != MH_OK)
 	{
 		fprintf(stderr, "[ERR] MH_Uninitialize() failed\n\n");
