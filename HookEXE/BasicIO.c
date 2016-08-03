@@ -68,7 +68,7 @@ int BytePrefix(int sizelen)
 {
 	int whatbyte;
 
-    if (sizelen < KILOBYTE) // Byte
+	if (sizelen < KILOBYTE) // Byte
 		whatbyte = 0;
 	else if (sizelen < MEGABYTE) // KB
 		whatbyte = 1;

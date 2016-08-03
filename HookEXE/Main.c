@@ -48,7 +48,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// Get Command line arguments
 	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    if (JV_ParseArg(argc, argv, &g_arg))
+	if (JV_ParseArg(argc, argv, &g_arg))
 	{
 		fprintf(stderr, "[ERR] Invalid argument\n\n");
 		MessageBox(NULL, L"[ERR] Invalid argument", L"Error", MB_ICONERROR | MB_OK);
@@ -58,8 +58,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// Print Help Message and exit if '-h' '/?' is used
 	if (g_arg.help)
 	{
-        JVUI_PrintHelp(NULL);
-        exit(0);
+		JVUI_PrintHelp(NULL);
+		exit(0);
 	}
 
 	// Check if this windows is supported by Notepad-UTF8
@@ -69,13 +69,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			WCHAR msgbox[JV_BUF_SIZE];
 			StringCchPrintfW(msgbox, JV_BUF_SIZE,
-								L"[ERR] Notepad-UTF8 v%d.%d does not support this version of Windows.\n\n"
-								L"Please check for an update by visiting project website :\n- %s",
-								JV_VER_MAJOR, JV_VER_MINOR, JV_WEB_BINARY);
+							 L"[ERR] Notepad-UTF8 v%d.%d does not support this version of Windows.\n\n"
+							 L"Please check for an update by visiting project website :\n- %s",
+							 JV_VER_MAJOR, JV_VER_MINOR, JV_WEB_BINARY);
 			fprintf(stderr, "%S\n\n", msgbox);
 			MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
 		}
-        exit(1);
+		exit(1);
 	}
 
 	// Check bitness
@@ -88,7 +88,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			fprintf(stderr, "%S\n\n", msgbox);
 			MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
 		}
-        exit(1);
+		exit(1);
 	}
 
 	// Check if Notepad-UTF8 is already running.
@@ -108,10 +108,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	JV_GetDllName(g_dllName, sizeof(g_dllName));
 	JV_GetDllFullPath(g_dllFullPath, sizeof(g_dllFullPath));
 	// Check DLL's existance
-	#ifdef _DEBUG_CONSOLE
-    printf("DLL Path : %S\n", g_dllFullPath);
-	#endif // _DEBUG_CONSOLE
-    if (!PathFileExistsW(g_dllFullPath))
+#ifdef _DEBUG_CONSOLE
+	printf("DLL Path : %S\n", g_dllFullPath);
+#endif // _DEBUG_CONSOLE
+	if (!PathFileExistsW(g_dllFullPath))
 	{
 		WCHAR msgbox[JV_BUF_SIZE];
 		StringCchCopyW(msgbox, JV_BUF_SIZE, L"[ERR] Unable to find ");
@@ -120,7 +120,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		else if (hostArch == 64)
 			StringCchCatW(msgbox, JV_BUF_SIZE, DLL_NAME_64);
 		fprintf(stderr, "%S\n\n", msgbox);
-        MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
+		MessageBoxW(NULL, msgbox, L"Error", MB_OK | MB_ICONERROR);
 		exit(1);
 	}
 
@@ -147,102 +147,102 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 LRESULT CALLBACK WndProcedure(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (Msg)
-    {
+	{
 	case WM_CREATE:
-		#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 		puts("WM_CREATE");
-		#endif // _DEBUG_CONSOLE
+#endif // _DEBUG_CONSOLE
 		// popup ballon notification only when quiet option is not used
 		JVUI_AddTrayIcon(hWnd, JV_SYSTRAY_ID_ON, NIF_MESSAGE | NIF_TIP | (g_arg.quiet ? 0 : NIF_INFO), WM_APP_SYSTRAY_POPUP, L"Notepad-UTF8 On");
 		break;
 	case WM_APP_SYSTRAY_POPUP: // systray msg callback
-		#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 		puts("WM_APP_SYSTRAY_POPUP");
-		#endif
-        switch (lParam)
-        {
+#endif
+		switch (lParam)
+		{
 		case WM_LBUTTONDBLCLK:
-			#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 			puts("  WM_LBUTTONDBLCLK");
-			#endif // _DEBUG_CONSOLE
+#endif // _DEBUG_CONSOLE
 			SendMessage(hWnd, WM_COMMAND, ID_ABOUT, 0);
 			break;
 		case WM_RBUTTONUP:
-			#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 			puts("  WM_RBUTTONUP");
-			#endif // _DEBUG_CONSOLE
+#endif // _DEBUG_CONSOLE
 			SetForegroundWindow(hWnd);
 			JVUI_ShowPopupMenu(hWnd, NULL, -1);
 			PostMessage(hWnd, WM_APP_SYSTRAY_POPUP, 0, 0);
 			break;
-        }
-        break;
+		}
+		break;
 	case WM_COMMAND: // systray msg callback
-		#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 		puts("WM_COMMAND");
-		#endif // _DEBUG_CONSOLE
-        switch (LOWORD(wParam))
-        {
-            case ID_ABOUT:
-				#ifdef _DEBUG_CONSOLE
-				puts("  ID_ABOUT");
-				#endif // _DEBUG_CONSOLE
-				// Print program banner
-				JVUI_PrintBanner(g_hWnd);
+#endif // _DEBUG_CONSOLE
+		switch (LOWORD(wParam))
+		{
+		case ID_ABOUT:
+#ifdef _DEBUG_CONSOLE
+			puts("  ID_ABOUT");
+#endif // _DEBUG_CONSOLE
+			// Print program banner
+			JVUI_PrintBanner(g_hWnd);
+			break;
+		case ID_HELP:
+#ifdef _DEBUG_CONSOLE
+			puts("  ID_HELP");
+#endif // _DEBUG_CONSOLE
+			// Print help message
+			JVUI_PrintHelp(g_hWnd);
+			break;
+		case ID_HOMEPAGE:
+#ifdef _DEBUG_CONSOLE
+			puts(" ID_HOMEPAGE");
+#endif // _DEBUG_CONSOLE
+			JVUI_OpenHomepage(g_hWnd);
+			break;
+		case ID_LICENSE:
+#ifdef _DEBUG_CONSOLE
+			puts(" ID_LICENSE");
+#endif // _DEBUG_CONSOLE
+			JVUI_OpenLicense(g_hWnd);
+			break;
+		case ID_TOGGLE:
+#ifdef _DEBUG_CONSOLE
+			puts("  ID_TOGGLE");
+#endif // _DEBUG_CONSOLE
+			switch (g_state)
+			{
+			case JV_STATE_TURN_ON:
+				JV_TurnOff(g_dllName);
 				break;
-			case ID_HELP:
-				#ifdef _DEBUG_CONSOLE
-				puts("  ID_HELP");
-				#endif // _DEBUG_CONSOLE
-				// Print help message
-				JVUI_PrintHelp(g_hWnd);
+			case JV_STATE_TURN_OFF:
+				JV_TurnOn(g_dllFullPath);
 				break;
-			case ID_HOMEPAGE:
-				#ifdef _DEBUG_CONSOLE
-				puts(" ID_HOMEPAGE");
-				#endif // _DEBUG_CONSOLE
-				JVUI_OpenHomepage(g_hWnd);
-				break;
-			case ID_LICENSE:
-				#ifdef _DEBUG_CONSOLE
-				puts(" ID_LICENSE");
-				#endif // _DEBUG_CONSOLE
-				JVUI_OpenLicense(g_hWnd);
-				break;
-			case ID_TOGGLE:
-				#ifdef _DEBUG_CONSOLE
-				puts("  ID_TOGGLE");
-				#endif // _DEBUG_CONSOLE
-                switch (g_state)
-                {
-				case JV_STATE_TURN_ON:
-					JV_TurnOff(g_dllName);
-					break;
-				case JV_STATE_TURN_OFF:
-					JV_TurnOn(g_dllFullPath);
-					break;
-                }
-				break;
-			case ID_EXIT:
-				#ifdef _DEBUG_CONSOLE
-				puts("  ID_EXIT");
-				#endif // _DEBUG_CONSOLE
-				PostMessage(hWnd, WM_CLOSE, 0, 0);
-				break;
-        }
-        break;
+			}
+			break;
+		case ID_EXIT:
+#ifdef _DEBUG_CONSOLE
+			puts("  ID_EXIT");
+#endif // _DEBUG_CONSOLE
+			PostMessage(hWnd, WM_CLOSE, 0, 0);
+			break;
+		}
+		break;
 	case WM_CLOSE: // 0x0010
-		#ifdef _DEBUG_CONSOLE
+#ifdef _DEBUG_CONSOLE
 		puts("WM_CLOSE");
-		#endif // _DEBUG_CONSOLE
+#endif // _DEBUG_CONSOLE
 		JVUI_WM_CLOSE(hWnd, TRUE);
-        break;
+		break;
 	default:
 		return DefWindowProc(hWnd, Msg, wParam, lParam);
 		break;
-    }
+	}
 
-    return 0;
+	return 0;
 }
 
 bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg)
@@ -259,7 +259,7 @@ bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg)
 		for (int i = 1; i < argc; i++)
 		{
 			flag_err = false;
-            if (StrCmpIW(argv[i], L"-q") == 0 || StrCmpIW(argv[i], L"--quiet") == 0 || StrCmpIW(argv[i], L"/q") == 0)
+			if (StrCmpIW(argv[i], L"-q") == 0 || StrCmpIW(argv[i], L"--quiet") == 0 || StrCmpIW(argv[i], L"/q") == 0)
 				arg->quiet = JV_ARG_QUIET_ON;
 			else if (StrCmpIW(argv[i], L"-h") == 0 || StrCmpIW(argv[i], L"--help") == 0 || StrCmpIW(argv[i], L"/?") == 0 || StrCmpIW(argv[i], L"-?") == 0)
 				arg->help = JV_ARG_HELP_ON;
@@ -274,8 +274,8 @@ bool JV_ParseArg(int argc, LPWSTR* argv, JV_ARG* arg)
 
 bool JV_CheckWindowVer()
 {
-    JV_WIN_VER wv;
-    JV_GetHostVer(&wv);
+	JV_WIN_VER wv;
+	JV_GetHostVer(&wv);
 
 	// XP SP3
 	if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 5, 1, 2600, 5512))
@@ -309,7 +309,7 @@ WCHAR* JV_GetDllFullPath(WCHAR* dllFullPath, const size_t bufSize)
 	JV_GetDllName(dllName, sizeof(dllName));
 
 	GetModuleFileNameW(NULL, dllFullPath, bufSize);
-    dirPath = StrRChrW(dllFullPath, NULL, L'\\')+1;
+	dirPath = StrRChrW(dllFullPath, NULL, L'\\')+1;
 	StringCbCopyW(dirPath, bufSize, dllName);
 
 	return dllFullPath;

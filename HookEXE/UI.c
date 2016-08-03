@@ -68,17 +68,17 @@ HWND JVUI_InitWindow(HINSTANCE hInstance)
 	RegisterClassExW(&WndClsEx);
 
 	hWnd = CreateWindowExW(WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT, // dwExStyle 0x080800A8
-						JV_CLASS_NAME, 	// lpClassName
-						JV_WINDOW_NAME, 	// lpWindowName
-						WS_POPUP,		 // dwStyle, 0x80000000
-						0, 		// X
-						0, 		// Y
-						0, 		// nWidth
-						0, 		// nHeight
-						NULL,		// hWndParent
-						NULL, 		// hMenu
-						hInstance,	// hInstance
-						NULL);		// lpParam
+						   JV_CLASS_NAME, 	// lpClassName
+						   JV_WINDOW_NAME, 	// lpWindowName
+						   WS_POPUP,		 // dwStyle, 0x80000000
+						   0, 		// X
+						   0, 		// Y
+						   0, 		// nWidth
+						   0, 		// nHeight
+						   NULL,		// hWndParent
+						   NULL, 		// hMenu
+						   hInstance,	// hInstance
+						   NULL);		// lpParam
 
 	if (!IsWindow(hWnd)) // Is Window Created?
 	{
@@ -162,7 +162,7 @@ void JVUI_AddTrayIcon(HWND hWnd, UINT uID, UINT flag, UINT uCallbackMsg, LPCWSTR
 	nid.uFlags 		= NIF_ICON | flag;
 	nid.dwInfoFlags = NIIF_NOSOUND | NIIF_USER;
 
-	 // Don't throw an message
+	// Don't throw an message
 	if (uCallbackMsg)
 		nid.uCallbackMessage = uCallbackMsg;
 
@@ -215,14 +215,14 @@ void JVUI_PrintBanner(HWND hWnd)
 {
 	WCHAR msg[JV_BUF_SIZE];
 	StringCchPrintfW(msg, JV_BUF_SIZE,
-						L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
-						L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
-						L"[Binary] %s\n"
-						L"[Source] %s\n\n"
-						L"Build %04d%02d%02d",
-						JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
-						JV_WEB_BINARY, JV_WEB_SOURCE,
-						CompileYear(), CompileMonth(), CompileDay());
+					 L"Joveler's Notepad-UTF8 v%d.%d (%dbit)\n"
+					 L"Set Notepad's default encoding from ANSI to UTF-8.\n\n"
+					 L"[Binary] %s\n"
+					 L"[Source] %s\n\n"
+					 L"Build %04d%02d%02d",
+					 JV_VER_MAJOR, JV_VER_MINOR, JV_GetProcArch(),
+					 JV_WEB_BINARY, JV_WEB_SOURCE,
+					 CompileYear(), CompileMonth(), CompileDay());
 	printf("%S\n\n", msg);
 	MessageBoxW(hWnd, msg, L"Notepad-UTF8", MB_ICONINFORMATION | MB_OK);
 }

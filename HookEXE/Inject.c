@@ -13,17 +13,17 @@
 #include "Host.h"
 
 typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
-    PHANDLE ThreadHandle,
-    ACCESS_MASK DesiredAccess,
-    LPVOID ObjectAttributes,
-    HANDLE ProcessHandle,
-    LPTHREAD_START_ROUTINE lpStartAddress,
-    LPVOID lpParameter,
-    BOOL CreateSuspended,
-    DWORD dwStackSize,
-    LPVOID Unknown1,
-    LPVOID Unknown2,
-    LPVOID Unknown3);
+	PHANDLE ThreadHandle,
+	ACCESS_MASK DesiredAccess,
+	LPVOID ObjectAttributes,
+	HANDLE ProcessHandle,
+	LPTHREAD_START_ROUTINE lpStartAddress,
+	LPVOID lpParameter,
+	BOOL CreateSuspended,
+	DWORD dwStackSize,
+	LPVOID Unknown1,
+	LPVOID Unknown2,
+	LPVOID Unknown3);
 
 typedef BOOL (*fp_MessageHookStart_t)();
 typedef BOOL (*fp_MessageHookStop_t)();
@@ -64,25 +64,27 @@ BOOL JV_InjectDllByPID(const DWORD dwPID, const WCHAR *szDllPath)
 	JV_GetHostVer(&winVer);
 	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
 	if (!hProcess)
-    {
-        fprintf(stderr, "[ERR] OpenProcess(%lu) failed\nError Code : %lu\n\n", dwPID, GetLastError());
+	{
+		fprintf(stderr, "[ERR] OpenProcess(%lu) failed\nError Code : %lu\n\n", dwPID, GetLastError());
 		return FALSE;
-    }
+	}
 
-    dwBufSize = lstrlenW(szDllPath) * 2 + 1;
-    remoteProcBuf = VirtualAllocEx(hProcess, NULL, dwBufSize, MEM_COMMIT, PAGE_READWRITE);
-    if (!remoteProcBuf)
+	dwBufSize = lstrlenW(szDllPath) * 2 + 1;
+	remoteProcBuf = VirtualAllocEx(hProcess, NULL, dwBufSize, MEM_COMMIT, PAGE_READWRITE);
+	if (!remoteProcBuf)
 		return FALSE;
-    WriteProcessMemory(hProcess, remoteProcBuf, (void*)szDllPath, dwBufSize, NULL);
+	WriteProcessMemory(hProcess, remoteProcBuf, (void*)szDllPath, dwBufSize, NULL);
 	remoteThreadProc = (LPTHREAD_START_ROUTINE) GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW");
 
 	if (JV_CompareWinVer(&winVer, JV_CMP_GE, JV_CMP_L2, 6, 0, 0, 0))
-	{ // Vista <= WinVer
+	{
+		// Vista <= WinVer
 		fp_NtCreateThreadEx = (fp_NtCreateThreadEx_t) GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateThreadEx");
 		fp_NtCreateThreadEx(&hThread, 0x2000000, NULL, hProcess, remoteThreadProc, remoteProcBuf, FALSE, 0, NULL, NULL, NULL);
 	}
 	else
-	{ // 2000, XP
+	{
+		// 2000, XP
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, remoteProcBuf, 0, NULL);
 	}
 
@@ -110,19 +112,21 @@ BOOL JV_EjectDllByPID(const DWORD dwPID, const void* baseAddr)
 	JV_GetHostVer(&winVer);
 	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, dwPID);
 	if (!hProcess)
-    {
-        fprintf(stderr, "[ERR] OpenProcess(%lu) failed\nError Code : %lu\n\n", dwPID, GetLastError());
+	{
+		fprintf(stderr, "[ERR] OpenProcess(%lu) failed\nError Code : %lu\n\n", dwPID, GetLastError());
 		return FALSE;
-    }
+	}
 
 	remoteThreadProc = (LPTHREAD_START_ROUTINE) GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "FreeLibrary");
 	if (JV_CompareWinVer(&winVer, JV_CMP_GE, JV_CMP_L2, 6, 0, 0, 0))
-	{ // Vista <= WinVer
+	{
+		// Vista <= WinVer
 		fp_NtCreateThreadEx = (fp_NtCreateThreadEx_t) GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "NtCreateThreadEx");
 		fp_NtCreateThreadEx(&hThread, 0x2000000, NULL, hProcess, remoteThreadProc, (void*) baseAddr, FALSE, 0, NULL, NULL, NULL);
 	}
 	else
-	{ // 2000, XP
+	{
+		// 2000, XP
 		hThread = CreateRemoteThread(hProcess, NULL, 0, remoteThreadProc, (void*) baseAddr, 0, NULL);
 	}
 
@@ -138,27 +142,27 @@ BOOL JV_EjectDllByPID(const DWORD dwPID, const void* baseAddr)
 
 BYTE* JV_GetDllAddressFromPID(const DWORD dwPID, const WCHAR* dllName)
 {
-    HANDLE hModule = INVALID_HANDLE_VALUE;
-    MODULEENTRY32W me;
-    void* procBaseAddr = NULL;
+	HANDLE hModule = INVALID_HANDLE_VALUE;
+	MODULEENTRY32W me;
+	void* procBaseAddr = NULL;
 
-    // Take snapshot of moudles in this process
-    hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
-    if (hModule == INVALID_HANDLE_VALUE)
-    {
-    	fprintf(stderr, "[ERR] CreateToolhelp32Snapshot() failed\nError Code : %lu\n\n", GetLastError());
-    	return 0;
-    }
+	// Take snapshot of moudles in this process
+	hModule = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwPID);
+	if (hModule == INVALID_HANDLE_VALUE)
+	{
+		fprintf(stderr, "[ERR] CreateToolhelp32Snapshot() failed\nError Code : %lu\n\n", GetLastError());
+		return 0;
+	}
 
-    // Set me.dwSize
-    me.dwSize = sizeof(MODULEENTRY32W);
+	// Set me.dwSize
+	me.dwSize = sizeof(MODULEENTRY32W);
 
-    // Get Info of first module
-    if (!Module32First(hModule, &me))
-    {
-    	fprintf(stderr, "[ERR] Molule32First() failed\nError Code : %lu\n\n", GetLastError());
-    	return 0;
-    }
+	// Get Info of first module
+	if (!Module32First(hModule, &me))
+	{
+		fprintf(stderr, "[ERR] Molule32First() failed\nError Code : %lu\n\n", GetLastError());
+		return 0;
+	}
 
 	// Iterate modules
 	do
@@ -171,10 +175,10 @@ BYTE* JV_GetDllAddressFromPID(const DWORD dwPID, const WCHAR* dllName)
 		}
 	}
 	while (Module32Next(hModule, &me));
-    // Close Snapshot
-    CloseHandle(hModule);
+	// Close Snapshot
+	CloseHandle(hModule);
 
-    return (BYTE*) procBaseAddr;
+	return (BYTE*) procBaseAddr;
 }
 
 
@@ -399,39 +403,39 @@ BOOL JV_SetMessageHook(const WCHAR* dllFullPath)
 /// Get Debug Privilege - needs admin privilege
 DWORD JV_GetDebugPrivilege()
 {
-    HANDLE hProcess = GetCurrentProcess();
-    HANDLE hToken;
-    TOKEN_PRIVILEGES pToken;
-    LUID luid;
+	HANDLE hProcess = GetCurrentProcess();
+	HANDLE hToken;
+	TOKEN_PRIVILEGES pToken;
+	LUID luid;
 
-    if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
-    {
-        fprintf(stderr, "[ERR] OpenProcessToken() failed\nError Code : %lu\n\n", GetLastError());
-        return JV_DEBUG_PRIV_FAILURE;
-    }
+	if (!OpenProcessToken(hProcess, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+	{
+		fprintf(stderr, "[ERR] OpenProcessToken() failed\nError Code : %lu\n\n", GetLastError());
+		return JV_DEBUG_PRIV_FAILURE;
+	}
 
-    if (!LookupPrivilegeValueW(NULL, L"SeDebugPrivilege", &luid))
-    {
-        fprintf(stderr, "[ERR] LookupPrivilegeValue() failed\nError Code : %lu\n\n", GetLastError());
-        return JV_DEBUG_PRIV_FAILURE;
-    }
+	if (!LookupPrivilegeValueW(NULL, L"SeDebugPrivilege", &luid))
+	{
+		fprintf(stderr, "[ERR] LookupPrivilegeValue() failed\nError Code : %lu\n\n", GetLastError());
+		return JV_DEBUG_PRIV_FAILURE;
+	}
 
-    pToken.PrivilegeCount = 1;
-    pToken.Privileges[0].Luid = luid;
-    pToken.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	pToken.PrivilegeCount = 1;
+	pToken.Privileges[0].Luid = luid;
+	pToken.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, 0, (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
-    {
-        fprintf(stderr, "[ERR] AdjustTokenPrivileges() failed\nError Code : %lu\n\n", GetLastError());
-        return JV_DEBUG_PRIV_FAILURE;
-    }
+	if (!AdjustTokenPrivileges(hToken, FALSE, &pToken, 0, (TOKEN_PRIVILEGES*) NULL, (DWORD*) NULL))
+	{
+		fprintf(stderr, "[ERR] AdjustTokenPrivileges() failed\nError Code : %lu\n\n", GetLastError());
+		return JV_DEBUG_PRIV_FAILURE;
+	}
 
-    if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
-    {
-        // fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\nTry running this program with Administrator Privilege.\n\n");
-        return JV_DEBUG_PRIV_NO_ADMIN;
-    }
-    CloseHandle(hToken);
+	if (GetLastError() == ERROR_NOT_ALL_ASSIGNED)
+	{
+		// fprintf(stderr, "[ERR] ERROR_NOT_ALL_ASSIGNED\nTry running this program with Administrator Privilege.\n\n");
+		return JV_DEBUG_PRIV_NO_ADMIN;
+	}
+	CloseHandle(hToken);
 
-    return JV_DEBUG_PRIV_SUCCESS;
+	return JV_DEBUG_PRIV_SUCCESS;
 }

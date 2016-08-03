@@ -11,7 +11,7 @@
 
 // MACRO for DEBUG
 #ifdef _DEBUG
-	#define _DEBUG_CONSOLE
+#define _DEBUG_CONSOLE
 #endif
 
 #define JV_WINDOW_NAME 		L"Joveler\'s Notepad-UTF8"
@@ -31,12 +31,12 @@
 
 typedef struct
 {
-    int quiet; // Do notification?
-    int help; // help message
+	int quiet; // Do notification?
+	int help; // help message
 } JV_ARG;
 
 #define JV_VER_MAJOR	1
-#define JV_VER_MINOR	0
+#define JV_VER_MINOR	1
 #define JV_WEB_BINARY	L"https://ied206.github.io/Notepad-UTF8"
 #define JV_WEB_SOURCE	L"https://github.com/ied206/Notepad-UTF8"
 

@@ -55,17 +55,17 @@ typedef BOOL (WINAPI *CREATEPROCESSW) (
 	LPPROCESS_INFORMATION lpProcessInformation);
 
 typedef DWORD (WINAPI *fp_NtCreateThreadEx_t)(
-    PHANDLE ThreadHandle,
-    ACCESS_MASK DesiredAccess,
-    LPVOID ObjectAttributes,
-    HANDLE ProcessHandle,
-    LPTHREAD_START_ROUTINE lpStartAddress,
-    LPVOID lpParameter,
-    BOOL CreateSuspended,
-    DWORD dwStackSize,
-    LPVOID Unknown1,
-    LPVOID Unknown2,
-    LPVOID Unknown3);
+	PHANDLE ThreadHandle,
+	ACCESS_MASK DesiredAccess,
+	LPVOID ObjectAttributes,
+	HANDLE ProcessHandle,
+	LPTHREAD_START_ROUTINE lpStartAddress,
+	LPVOID lpParameter,
+	BOOL CreateSuspended,
+	DWORD dwStackSize,
+	LPVOID Unknown1,
+	LPVOID Unknown2,
+	LPVOID Unknown3);
 
 
 #endif // VAR_H_INCLUDED
