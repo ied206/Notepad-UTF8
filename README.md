@@ -1,5 +1,5 @@
 # Notepad-UTF8
-Set Notepad's default encoding to UTF-8 from ANSI. 
+Set Notepad's default encoding to UTF-8 from ANSI.
 
 Written in C99, for Win32 platform.
 
@@ -62,14 +62,21 @@ Notepad-UTF8 supports Windows XP to 10.
     <td>O<br></td>
   </tr>
   <tr>
-    <td>10 (Build 10240)</td>
+    <td>10 (v1507)</td>
     <td>O</td>
     <td>O</td>
     <td>X</td>
     <td>X</td>
   </tr>
   <tr>
-    <td>10 (Build 10586)</td>
+    <td>10 (v1511)</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+    <td>O</td>
+  </tr>
+  <tr>
+    <td>10 (v1607)</td>
     <td>O</td>
     <td>O</td>
     <td>O</td>
