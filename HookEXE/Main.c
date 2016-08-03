@@ -292,11 +292,14 @@ bool JV_CheckWindowVer()
 	// 8.1 Update 1
 	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 6, 3, 9600, 17415))
 		return true;
-	// 10.0.10240
+	// 10.0.10240 (v1507)
 	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 10, 0, 10240, 16384))
 		return true;
-	// 10.0.10586
+	// 10.0.10586 (v1511)
 	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 10, 0, 10586, 0))
+		return true;
+	// 10.0.10586 (v1607)
+	else if (JV_CompareWinVer(&wv, JV_CMP_E, JV_CMP_L3, 10, 0, 14393, 10))
 		return true;
 	else
 		return false;
